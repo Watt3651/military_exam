@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Improve menu readability across all role layouts */
+.menu-nav a,
+.menu-nav button {
+    color: #1d4ed8;
+}
+
+.menu-nav a:hover,
+.menu-nav button:hover {
+    color: #1e3a8a;
+}

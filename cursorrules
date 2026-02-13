@@ -1,0 +1,441 @@
+# Cursor AI Rules for Military Promotion Examination System
+
+You are an expert Laravel 11 and Livewire 3 developer working on a Military Promotion Examination System.
+
+## Project Context
+This is a Military Promotion Examination System (ระบบสอบเลื่อนฐานะทหาร) built with:
+- Laravel (PHP)
+- Livewire  (Full-stack framework)
+- TailwindCSS 
+- MySQL 
+- Alpine.js (included with Livewire)
+
+## Always Reference Documentation
+**CRITICAL:** Always reference @Military_Promotion_Exam_System_Complete_Documentation.md before creating any code. This documentation contains:
+- Complete requirements
+- Database schema (DDL)
+- RBAC rules (3 roles: examinee, staff, commander)
+- Business logic
+- UI/UX guidelines
+- Security requirements
+
+## Tech Stack Rules
+
+### Backend
+- Use Laravel 11.x features (new directory structure, slim skeleton)
+- Use Livewire 3.x for all interactive UI (NO Vue.js, NO React, NO Inertia)
+- Use Eloquent ORM exclusively (avoid raw SQL unless absolutely necessary)
+- Use Spatie Laravel Permission for RBAC
+- Use Spatie Laravel Activity Log for audit trails
+- Use barryvdh/laravel-dompdf for PDF generation
+- Use maatwebsite/excel for Excel import/export
+
+### Frontend
+- Use Livewire components for all UI
+- Use Alpine.js for minor interactions
+- Use TailwindCSS utility-first approach
+- NO separate JavaScript frameworks
+
+### Database
+- MySQL 8.0+
+- Use migrations exclusively (never alter database manually)
+- Use Eloquent relationships (never manual joins unless performance-critical)
+- Add indexes for foreign keys and frequently queried columns
+- Use soft deletes for important data
+
+## Color Theme (MUST FOLLOW)
+Primary (Dark Green):
+- primary-600: #1B4332
+- primary-500: #2D6A4F
+- primary-700: #14532d
+
+Secondary (Pastel Yellow):
+- secondary-100: #FEF3C7
+- secondary-200: #FDE68A
+- secondary-300: #FCD34D
+
+Use these colors in all UI components.
+
+## Coding Standards
+
+### PHP/Laravel
+1. Use PHP features (typed properties, constructor property promotion, etc.)
+2. Always add type hints for parameters and return types
+3. Use strict types: `declare(strict_types=1);`
+4. Follow PSR-12 coding standard
+5. Use Laravel Pint for code formatting
+6. Add PHPDoc comments for complex logic
+
+### Naming Conventions
+- Controllers: PascalCase + Controller suffix (e.g., `LoginController`)
+- Livewire Components: PascalCase (e.g., `BorderAreaManagement`)
+- Models: Singular PascalCase (e.g., `User`, `ExamSession`)
+- Tables: Plural snake_case (e.g., `users`, `exam_sessions`)
+- Migrations: descriptive snake_case (e.g., `create_border_areas_table`)
+- Services: PascalCase + Service suffix (e.g., `ExamNumberGenerator`)
+- Views: kebab-case (e.g., `border-area-management.blade.php`)
+- Routes: kebab-case (e.g., `/border-areas/create`)
+
+### Validation
+- Always validate user input
+- Use Form Requests for complex validation
+- Use Livewire validation rules in components
+- Return clear, user-friendly error messages in Thai
+
+### Security
+- **CRITICAL:** Always check user roles and permissions
+- Use middleware for route protection
+- Use Spatie Permission `@can`, `@role` directives
+- Never trust user input - always validate and sanitize
+- Use CSRF protection (built-in to Laravel)
+- Use bcrypt for password hashing
+- Log all sensitive operations using Spatie Activity Log
+
+## RBAC Rules (MUST ENFORCE)
+
+### Roles (3 types)
+1. **examinee** - ผู้เข้าสอบ (can self-register)
+2. **staff** - เจ้าหน้าที่ (created by other staff only)
+3. **commander** - ผู้บังคับบัญชา (created by staff, read-only)
+
+### Permission Principles
+- Examinee: View and edit OWN data only
+- Staff: Full CRUD on ALL data
+- Commander: Read-only access to reports and statistics
+
+### Critical RBAC Rules
+- Always check permissions before any sensitive operation
+- Log all data modifications (use Spatie Activity Log)
+- Never allow examinee to see other examinees' data
+- Never allow commander to modify data (read-only)
+
+## Database Rules
+
+### Migrations
+- Always use descriptive migration names
+- Add foreign keys with proper `ON DELETE` actions
+- Add indexes for:
+  - Foreign keys
+  - Frequently queried columns
+  - Unique constraints
+- Use `softDeletes()` for important tables (users, examinees, etc.)
+- Follow the exact schema in documentation section 5.2
+
+### Models
+- Always define `$fillable` or `$guarded`
+- Define relationships (hasMany, belongsTo, etc.)
+- Use Observers for complex model events
+- Use Mutators/Accessors when needed
+- Add model-level validation when appropriate
+
+### Eloquent Relationships (from documentation)
+```php
+// User → Examinee (1:1)
+public function examinee() { return $this->hasOne(Examinee::class); }
+
+// Examinee → User (1:1)
+public function user() { return $this->belongsTo(User::class); }
+
+// Examinee → Branch (N:1)
+public function branch() { return $this->belongsTo(Branch::class); }
+
+// BorderArea → ScoreHistory (1:N)
+public function scoreHistory() { return $this->hasMany(BorderAreaScoreHistory::class); }
+
+// Always include these in queries that need user names or branch names
+```
+
+## Livewire Component Rules
+
+### Component Structure
+```php
+<?php
+
+namespace App\Livewire\Staff\BorderAreas;
+
+use Livewire\Component;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+
+#[Layout('components.layouts.staff')]
+#[Title('จัดการพื้นที่ชายแดน')]
+class Index extends Component
+{
+    // Properties
+    
+    // Validation rules
+    
+    // Lifecycle hooks
+    
+    // Actions
+    
+    // Render
+    public function render()
+    {
+        return view('livewire.staff.border-areas.index');
+    }
+}
+```
+
+### Livewire Best Practices
+- Use Livewire 3 attributes (#[Layout], #[Title], etc.)
+- Use `wire:model.live` for real-time validation
+- Use `wire:loading` for better UX
+- Emit events for component communication
+- Use computed properties for expensive operations
+- Always validate in public methods
+
+## UI/UX Rules
+
+### TailwindCSS
+- Use utility-first approach
+- Follow color theme strictly (primary green, secondary yellow)
+- Use responsive classes (sm:, md:, lg:)
+- Use consistent spacing (p-4, m-4, gap-4)
+- Use consistent border radius (rounded-lg)
+
+### Components
+- Button: `bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md`
+- Input: `border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500`
+- Table: Use `min-w-full divide-y divide-gray-200` pattern
+- Badge Active: `bg-green-100 text-green-800`
+- Badge Inactive: `bg-red-100 text-red-800`
+
+### Forms
+- Always show validation errors
+- Use clear Thai labels
+- Add placeholder text
+- Show loading states during submission
+- Show success/error messages after actions
+
+## Business Logic
+
+### Exam Number Generation (Section 2.5)
+Format: XYZNN (5 digits)
+- X = Test Location Code (1 digit)
+- Y = Branch Code (1 digit)  
+- ZNN = Sequence sorted by first_name (001-999)
+
+Example: 11001 = Location 1, Branch 1, Sequence 001
+
+### Score Calculation (Section 9.2)
+```php
+// Pending Score = (Current Year - Eligible Year) - Suspended Years
+// Total Score = Pending Score + Special Score (from border area)
+```
+
+### Border Area Management (Section 2.4)
+- Staff can CRUD border areas
+- Staff can set special scores
+- Every score change MUST log to border_area_score_history
+- Commander can view (read-only)
+- Examinee can only select from dropdown
+
+### Edit Logging (Section 2.2.4)
+- When staff edits examinee data, log to examinee_edit_logs:
+  - field_name
+  - old_value
+  - new_value
+  - edited_by (staff user_id)
+  - reason (required)
+  - edited_at
+
+## Service Pattern
+
+### When to Use Services
+- Complex business logic
+- Logic used across multiple controllers/components
+- Third-party API integration
+- Complex calculations
+
+### Service Example
+```php
+namespace App\Services;
+
+class BorderAreaService
+{
+    public function updateWithHistory(
+        BorderArea $borderArea,
+        array $data,
+        int $userId,
+        ?string $reason = null
+    ): BorderArea {
+        $oldScore = $borderArea->special_score;
+        $newScore = $data['special_score'];
+        
+        $borderArea->update($data);
+        $borderArea->updated_by = $userId;
+        $borderArea->save();
+        
+        if ($oldScore != $newScore) {
+            BorderAreaScoreHistory::create([
+                'border_area_id' => $borderArea->id,
+                'old_score' => $oldScore,
+                'new_score' => $newScore,
+                'changed_by' => $userId,
+                'reason' => $reason,
+                'changed_at' => now(),
+            ]);
+        }
+        
+        return $borderArea;
+    }
+}
+```
+
+## Error Handling
+
+### Validation Errors
+- Return Thai language error messages
+- Be specific about what's wrong
+- Suggest how to fix
+
+### Exceptions
+- Catch specific exceptions
+- Log errors using Laravel Log
+- Show user-friendly messages
+- Never expose sensitive information
+
+### Example
+```php
+try {
+    $this->borderAreaService->updateWithHistory(/* ... */);
+    session()->flash('success', 'บันทึกข้อมูลสำเร็จ');
+} catch (\Exception $e) {
+    Log::error('Border area update failed', ['error' => $e->getMessage()]);
+    session()->flash('error', 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+}
+```
+
+## Testing
+
+### What to Test
+- Feature tests for critical flows (registration, exam number generation)
+- Unit tests for services and calculations
+- Authorization tests for RBAC rules
+
+### Example Test
+```php
+public function test_staff_can_create_border_area(): void
+{
+    $staff = User::factory()->create(['role' => 'staff']);
+    $this->actingAs($staff);
+    
+    $response = $this->post('/staff/border-areas', [
+        'code' => 'BA01',
+        'name' => 'จ.นราธิวาส',
+        'special_score' => 5.00,
+    ]);
+    
+    $response->assertRedirect();
+    $this->assertDatabaseHas('border_areas', [
+        'code' => 'BA01',
+        'created_by' => $staff->id,
+    ]);
+}
+```
+
+## File Creation Workflow
+
+### When Creating Features
+1. Check documentation section for requirements
+2. Create migration (follow schema exactly)
+3. Create model with relationships
+4. Create service if needed
+5. Create Livewire component
+6. Create view
+7. Add routes
+8. Test with different roles
+
+### Example Prompt Response
+When user asks to create a feature:
+1. Reference documentation section
+2. List all files that will be created
+3. Create files in logical order (migration → model → service → component → view → routes)
+4. Include validation, authorization, and error handling
+5. Follow naming conventions
+6. Use color theme
+7. Add comments for complex logic
+
+## Deployment Considerations
+
+### Production Ready Code
+- All migrations work without errors
+- All relationships properly defined
+- Indexes added for performance
+- Soft deletes used appropriately
+- Activity logs for audit trail
+- Proper error handling
+- Security checks in place
+- RBAC properly enforced
+
+## Common Patterns
+
+### CRUD Controller Pattern (Livewire)
+```php
+// Index: List all with search/filter
+// Create: Form to create new
+// Edit: Form to update existing (with edit log for staff)
+// Delete: Soft delete with confirmation
+```
+
+### Authorization Pattern
+```php
+// Check before action
+if (!auth()->user()->hasRole('staff')) {
+    abort(403);
+}
+
+// Or use middleware in routes
+Route::middleware(['role:staff'])->group(function () {
+    // routes here
+});
+```
+
+### Activity Log Pattern
+```php
+use Spatie\Activitylog\Traits\LogsActivity;
+
+class Examinee extends Model
+{
+    use LogsActivity;
+    
+    protected static $logAttributes = ['*'];
+    protected static $logOnlyDirty = true;
+}
+```
+
+## Response Format
+
+### When Creating Code
+1. Explain what you're creating
+2. Reference documentation section
+3. Show complete code with comments
+4. Explain any complex logic
+5. Mention related files that need updates
+
+### When Debugging
+1. Identify the issue
+2. Reference documentation for correct implementation
+3. Show the fix with explanation
+4. Test suggestions
+
+## Final Reminders
+
+1. **ALWAYS reference documentation** before creating code
+2. **ALWAYS follow RBAC rules** - wrong permissions = critical security issue
+3. **ALWAYS use Thai** for user-facing messages and labels
+4. **ALWAYS log sensitive operations** using Activity Log
+5. **ALWAYS validate input** - never trust user data
+6. **ALWAYS follow color theme** - primary green, secondary yellow
+7. **NEVER use Vue/React** - this is Livewire-only
+8. **NEVER skip soft deletes** on important tables
+9. **NEVER forget to add indexes** on foreign keys
+10. **NEVER expose sensitive data** to unauthorized roles
+
+## When in Doubt
+- Check @Military_Promotion_Exam_System_Complete_Documentation.md
+- Follow Laravel best practices
+- Ask for clarification on requirements
+- Prefer explicit over implicit
+- Write clean, readable code
