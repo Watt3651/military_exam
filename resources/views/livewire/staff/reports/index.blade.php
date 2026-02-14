@@ -10,7 +10,7 @@
                 <div>
                     <label for="reportType" class="block text-sm font-medium text-gray-700">ประเภทรายงาน</label>
                     <select id="reportType" wire:model.live="reportType"
-                            class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                        class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
                         <option value="examinee_list_pdf">พิมพ์รายชื่อผู้สอบ (PDF)</option>
                         <option value="all_examinees_excel">Export ข้อมูลผู้สมัครทั้งหมด (Excel)</option>
                     </select>
@@ -21,7 +21,7 @@
                     <div>
                         <label for="exam_session_id" class="block text-sm font-medium text-gray-700">รอบสอบ</label>
                         <select id="exam_session_id" wire:model.live="exam_session_id"
-                                class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                            class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
                             <option value="">ทั้งหมด</option>
                             @foreach ($this->examSessions as $session)
                                 <option value="{{ $session->id }}">{{ $session->display_name }}</option>
@@ -33,7 +33,7 @@
                     <div>
                         <label for="exam_level" class="block text-sm font-medium text-gray-700">ระดับการสอบ</label>
                         <select id="exam_level" wire:model.live="exam_level"
-                                class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                            class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
                             <option value="">ทั้งหมด</option>
                             <option value="sergeant_major">จ่าเอก</option>
                             <option value="master_sergeant">พันจ่าเอก</option>
@@ -44,7 +44,7 @@
                     <div>
                         <label for="branch_id" class="block text-sm font-medium text-gray-700">เหล่า</label>
                         <select id="branch_id" wire:model.live="branch_id"
-                                class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                            class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
                             <option value="">ทั้งหมด</option>
                             @foreach ($this->branches as $branch)
                                 <option value="{{ $branch->id }}">{{ $branch->name }} ({{ $branch->code }})</option>
@@ -61,8 +61,8 @@
                             @endif
                         </label>
                         <select id="test_location_id" wire:model.live="test_location_id"
-                                class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                                @disabled($reportType !== 'examinee_list_pdf')>
+                            class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+                            @disabled($reportType !== 'examinee_list_pdf')>
                             <option value="">-- เลือกสถานที่สอบ --</option>
                             @foreach ($this->testLocations as $location)
                                 <option value="{{ $location->id }}">{{ $location->name }} ({{ $location->code }})</option>
@@ -74,8 +74,8 @@
 
                 <div class="pt-2 flex items-center justify-end gap-3">
                     <button type="submit"
-                            class="inline-flex items-center px-4 py-2 rounded-md bg-primary-600 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
-                            wire:loading.attr="disabled">
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50"
+                        wire:loading.attr="disabled">
                         <span wire:loading.remove wire:target="generate">
                             {{ $reportType === 'all_examinees_excel' ? 'Generate Excel' : 'Generate PDF' }}
                         </span>

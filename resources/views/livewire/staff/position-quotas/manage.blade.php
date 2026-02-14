@@ -24,7 +24,7 @@
                 <div>
                     <label for="exam_session_id" class="block text-sm font-medium text-gray-700">รอบสอบ</label>
                     <select id="exam_session_id" wire:model.live="exam_session_id"
-                            class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                        class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
                         <option value="">-- เลือกรอบสอบ --</option>
                         @foreach ($this->examSessions as $session)
                             <option value="{{ $session->id }}">
@@ -38,30 +38,31 @@
                 <div>
                     <label for="position_name" class="block text-sm font-medium text-gray-700">ตำแหน่ง</label>
                     <input id="position_name" type="text" wire:model.live="position_name"
-                           class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                           placeholder="เช่น ผบ.หมู่">
+                        class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+                        placeholder="เช่น ผบ.หมู่">
                     @error('position_name') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
                     <label for="quota_count" class="block text-sm font-medium text-gray-700">จำนวนอัตรา</label>
                     <input id="quota_count" type="number" min="0" wire:model.live="quota_count"
-                           class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                           placeholder="เช่น 50">
+                        class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+                        placeholder="เช่น 50">
                     @error('quota_count') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="md:col-span-3 flex items-center justify-end gap-2 pt-2">
                     @if ($editingId)
                         <button type="button" wire:click="cancelEdit"
-                                class="px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50">
                             ยกเลิกแก้ไข
                         </button>
                     @endif
                     <button type="submit"
-                            class="px-4 py-2 rounded-md bg-primary-600 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
-                            wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="save">{{ $editingId ? 'บันทึกการแก้ไข' : 'เพิ่มอัตรา' }}</span>
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50"
+                        wire:loading.attr="disabled">
+                        <span wire:loading.remove
+                            wire:target="save">{{ $editingId ? 'บันทึกการแก้ไข' : 'เพิ่มอัตรา' }}</span>
                         <span wire:loading wire:target="save">กำลังบันทึก...</span>
                     </button>
                 </div>
@@ -72,20 +73,29 @@
             <div class="p-6 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
                 <h3 class="text-lg font-semibold text-gray-900">อัตราปัจจุบัน</h3>
                 <input type="text" wire:model.live.debounce.300ms="search"
-                       class="w-full sm:w-80 rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500 text-sm"
-                       placeholder="ค้นหาจากตำแหน่ง">
+                    class="w-full sm:w-80 rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500 text-sm"
+                    placeholder="ค้นหาจากตำแหน่ง">
             </div>
 
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รอบสอบ</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ตำแหน่ง</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">อัตรา</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">สมัครแล้ว</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">คงเหลือ</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                รอบสอบ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ตำแหน่ง</th>
+                            <th
+                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                อัตรา</th>
+                            <th
+                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                สมัครแล้ว</th>
+                            <th
+                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                คงเหลือ</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
@@ -95,21 +105,24 @@
                                     {{ $quota->examSession?->display_name ?? '-' }}
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ $quota->position_name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">{{ $quota->quota_count }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">{{ $quota->registered_count }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
+                                    {{ $quota->quota_count }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
+                                    {{ $quota->registered_count }}
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
                                     {{ max(0, $quota->quota_count - $quota->registered_count) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right">
                                     <div class="inline-flex items-center gap-2">
                                         <button type="button" wire:click="edit({{ $quota->id }})"
-                                                class="px-3 py-1.5 rounded-md bg-amber-100 text-amber-800 hover:bg-amber-200 text-xs font-medium">
+                                            class="px-3 py-1.5 rounded-md bg-amber-100 text-amber-800 hover:bg-amber-200 text-xs font-medium">
                                             แก้ไข
                                         </button>
-                                        <button type="button"
-                                                wire:click="delete({{ $quota->id }})"
-                                                wire:confirm="ยืนยันการลบอัตราตำแหน่งนี้?"
-                                                class="px-3 py-1.5 rounded-md bg-red-100 text-red-700 hover:bg-red-200 text-xs font-medium">
+                                        <button type="button" wire:click="delete({{ $quota->id }})"
+                                            wire:confirm="ยืนยันการลบอัตราตำแหน่งนี้?"
+                                            class="px-3 py-1.5 rounded-md bg-red-100 text-red-700 hover:bg-red-200 text-xs font-medium">
                                             ลบ
                                         </button>
                                     </div>

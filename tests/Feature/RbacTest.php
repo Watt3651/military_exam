@@ -491,9 +491,14 @@ describe('Staff route access for all routes', function () {
         ];
 
         foreach ($routes as $route) {
-            $this->actingAs($user)
+            $response = $this->actingAs($user)
                 ->get($route)
                 ->assertStatus(200, "Failed asserting $route returns 200");
+
+            if ($route === '/staff/exam-sessions/create') {
+                // ensure the page isn't the old stub and includes a submit button
+                $response->assertSee('บันทึกข้อมูล');
+            }
         }
     });
 
@@ -503,6 +508,15 @@ describe('Staff route access for all routes', function () {
         $this->actingAs($user)
             ->get('/staff/users/create')
             ->assertStatus(200);
+    });
+
+    test('staff exam-sessions create page shows save button', function () {
+        $user = createUserWithRole('staff');
+
+        $this->actingAs($user)
+            ->get('/staff/exam-sessions/create')
+            ->assertStatus(200)
+            ->assertSee('บันทึกข้อมูล');
     });
 });
 

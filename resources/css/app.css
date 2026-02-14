@@ -3,12 +3,24 @@
 @tailwind utilities;
 
 /* Improve menu readability across all role layouts */
-.menu-nav a,
-.menu-nav button {
-    color: #1d4ed8;
+/* Only target direct nav-links and dropdown triggers, not all buttons */
+.menu-nav > div a,
+.menu-nav > div button,
+.menu-nav > div span {
+    color: #111827;
 }
 
-.menu-nav a:hover,
-.menu-nav button:hover {
-    color: #1e3a8a;
+.menu-nav > div a:hover,
+.menu-nav > div button:hover {
+    color: #2563eb;
+}
+
+/* Preserve white text on colored buttons (submit, delete, etc.) */
+button[type="submit"].text-white,
+a.text-white,
+.bg-primary-600,
+.bg-red-600,
+.bg-blue-600,
+.bg-green-600 {
+    color: #fff !important;
 }
