@@ -1,4 +1,4 @@
-<nav class="-mx-3 flex flex-1 items-center justify-end gap-2 rounded-xl bg-white/85 px-2 py-1.5 shadow-md ring-1 ring-blue-200 backdrop-blur-sm">
+<nav class="inline-flex items-center gap-2 rounded-xl bg-white/85 px-2 py-1.5 shadow-md ring-1 ring-blue-200 backdrop-blur-sm">
     @auth
         <span class="mr-2 text-sm font-medium text-blue-900">
             {{ auth()->user()->full_name }}
