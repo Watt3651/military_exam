@@ -37,7 +37,8 @@ URL: /staff/users/create
                                 <label class="block text-xs font-medium text-gray-500">หมายเลขประจำตัว (Username)</label>
                                 <div class="mt-1 flex items-center gap-2">
                                     <p class="text-lg font-mono font-semibold text-gray-900">
-                                        {{ $created_user_data['national_id'] }}</p>
+                                        {{ $created_user_data['national_id'] }}
+                                    </p>
                                     <button type="button"
                                         onclick="navigator.clipboard.writeText('{{ $created_user_data['national_id'] }}')"
                                         class="text-gray-500 hover:text-gray-700" title="คัดลอก">
@@ -168,7 +169,7 @@ URL: /staff/users/create
                             <div>
                                 <x-input-label for="rank" value="ยศ" class="required" />
                                 <x-text-input wire:model="rank" id="rank" class="block mt-1 w-full" type="text" required
-                                    placeholder="เช่น พ.อ., พ.ท., ร.อ." />
+                                    placeholder="เช่น น.อ., น.ท., ร.อ." />
                                 <x-input-error :messages="$errors->get('rank')" class="mt-2" />
                             </div>
 

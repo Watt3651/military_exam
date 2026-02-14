@@ -24,7 +24,7 @@
                     <div class="md:col-span-2">
                         <label for="exam_session_id" class="block text-sm font-medium text-gray-700">เลือกรอบสอบ</label>
                         <select id="exam_session_id" wire:model.live="exam_session_id"
-                                class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                            class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
                             <option value="">-- เลือกรอบสอบ --</option>
                             @foreach ($this->examSessions as $session)
                                 <option value="{{ $session->id }}">
@@ -61,9 +61,8 @@
 
                 <div class="flex items-center justify-end">
                     <button type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
-                            wire:loading.attr="disabled"
-                            @disabled($this->pendingCount === 0)>
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50"
+                        wire:loading.attr="disabled" @disabled($this->pendingCount === 0)>
                         <span wire:loading.remove wire:target="generate">สร้างหมายเลขสอบ</span>
                         <span wire:loading wire:target="generate">กำลังดำเนินการ...</span>
                     </button>
@@ -84,10 +83,17 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผู้สมัคร</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Location (X)</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Branch (Y)</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ตัวอย่างหมายเลข (XYZNN)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ผู้สมัคร</th>
+                            <th
+                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Location (X)</th>
+                            <th
+                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Branch (Y)</th>
+                            <th
+                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ตัวอย่างหมายเลข (XYZNN)</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
@@ -96,7 +102,8 @@
                                 <td class="px-6 py-4 text-sm text-gray-900">{{ $item['name'] }}</td>
                                 <td class="px-6 py-4 text-center text-sm text-gray-700">{{ $item['location_code'] }}</td>
                                 <td class="px-6 py-4 text-center text-sm text-gray-700">{{ $item['branch_code'] }}</td>
-                                <td class="px-6 py-4 text-center text-sm font-semibold text-primary-700">{{ $item['exam_number'] }}</td>
+                                <td class="px-6 py-4 text-center text-sm font-semibold text-primary-700">
+                                    {{ $item['exam_number'] }}</td>
                             </tr>
                         @empty
                             <tr>
