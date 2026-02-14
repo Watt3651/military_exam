@@ -95,6 +95,14 @@
                                     เหล่า
                                 </x-nav-link>
                                 
+                                {{-- สร้างหมายเลขสอบ --}}
+                                <x-nav-link :href="route('staff.exam-numbers.generate')" :active="request()->routeIs('staff.exam-numbers.*')" class="text-black hover:text-blue-600 border-blue-300">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                                    </svg>
+                                    หมายเลขสอบ
+                                </x-nav-link>
+
                                 {{-- รายงาน --}}
                                 <x-nav-link :href="route('staff.reports.index')" :active="request()->routeIs('staff.reports.*')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,6 +206,9 @@
                         </x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('staff.branches.index')" :active="request()->routeIs('staff.branches.*')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             เหล่า
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('staff.exam-numbers.generate')" :active="request()->routeIs('staff.exam-numbers.*')" class="text-black hover:text-blue-600 hover:bg-blue-50">
+                            หมายเลขสอบ
                         </x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('staff.reports.index')" :active="request()->routeIs('staff.reports.*')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             รายงาน

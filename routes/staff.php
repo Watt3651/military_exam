@@ -14,6 +14,7 @@ use App\Livewire\Staff\TestLocations\Create as CreateTestLocation;
 use App\Livewire\Staff\TestLocations\Edit as EditTestLocation;
 use App\Livewire\Staff\TestLocations\Index as TestLocationIndex;
 use App\Livewire\Staff\PositionQuotas\Manage as PositionQuotaManage;
+use App\Livewire\Staff\ExamNumbers\Generate as ExamNumberGenerate;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -130,6 +131,14 @@ Route::middleware(['auth', 'role:staff'])
             Route::get('/', BranchIndex::class)->name('index');
             Route::get('/create', CreateBranch::class)->name('create');
             Route::get('/{id}/edit', EditBranch::class)->name('edit');
+        });
+
+        // ═════════════════════════════════════════
+        // สร้างหมายเลขสอบ (Section 2.5.3)
+        // URL: /staff/exam-numbers/generate
+        // ═════════════════════════════════════════
+        Route::prefix('exam-numbers')->name('exam-numbers.')->group(function () {
+            Route::get('/generate', ExamNumberGenerate::class)->name('generate');
         });
 
         // ═════════════════════════════════════════
