@@ -25,14 +25,14 @@
                             <div class="shrink-0 flex items-center">
                                 <a href="{{ route('staff.dashboard') }}" class="flex items-center">
                                     <x-application-logo class="block h-9 w-auto fill-current text-white" />
-                                    <span class="ml-3 text-white font-bold text-lg hidden lg:block">เจ้าหน้าที่</span>
+                                    <span class="ml-3 text-black font-bold text-lg hidden lg:block">เจ้าหน้าที่</span>
                                 </a>
                             </div>
 
                             <!-- Navigation Links -->
                             <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex">
                                 {{-- Dashboard --}}
-                                <x-nav-link :href="route('staff.dashboard')" :active="request()->routeIs('staff.dashboard')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('staff.dashboard')" :active="request()->routeIs('staff.dashboard')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                     </svg>
@@ -40,7 +40,7 @@
                                 </x-nav-link>
                                 
                                 {{-- จัดการผู้สมัคร --}}
-                                <x-nav-link :href="route('staff.examinees.index')" :active="request()->routeIs('staff.examinees.*')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('staff.examinees.index')" :active="request()->routeIs('staff.examinees.*')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                     </svg>
@@ -48,7 +48,7 @@
                                 </x-nav-link>
                                 
                                 {{-- พื้นที่ชายแดน --}}
-                                <x-nav-link :href="route('staff.border-areas.index')" :active="request()->routeIs('staff.border-areas.*')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('staff.border-areas.index')" :active="request()->routeIs('staff.border-areas.*')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -57,15 +57,21 @@
                                 </x-nav-link>
                                 
                                 {{-- รอบสอบ --}}
-                                <x-nav-link :href="route('staff.exam-sessions.index')" :active="request()->routeIs('staff.exam-sessions.*')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('staff.exam-sessions.index')" :active="request()->routeIs('staff.exam-sessions.*')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                     รอบสอบ
                                 </x-nav-link>
+                                <x-nav-link :href="route('staff.exam-sessions.create')" :active="request()->routeIs('staff.exam-sessions.create')" class="text-black hover:text-blue-600 border-blue-300">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    สร้างรอบสอบ
+                                </x-nav-link>
 
                                 {{-- อัตราที่เปิดสอบ --}}
-                                <x-nav-link :href="route('staff.position-quotas.manage')" :active="request()->routeIs('staff.position-quotas.*')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('staff.position-quotas.manage')" :active="request()->routeIs('staff.position-quotas.*')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a3 3 0 006 0M9 5a3 3 0 016 0M9 12h6M9 16h6" />
                                     </svg>
@@ -73,7 +79,7 @@
                                 </x-nav-link>
 
                                 {{-- สถานที่สอบ --}}
-                                <x-nav-link :href="route('staff.test-locations.index')" :active="request()->routeIs('staff.test-locations.*')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('staff.test-locations.index')" :active="request()->routeIs('staff.test-locations.*')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -82,7 +88,7 @@
                                 </x-nav-link>
 
                                 {{-- เหล่า --}}
-                                <x-nav-link :href="route('staff.branches.index')" :active="request()->routeIs('staff.branches.*')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('staff.branches.index')" :active="request()->routeIs('staff.branches.*')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16" />
                                     </svg>
@@ -90,7 +96,7 @@
                                 </x-nav-link>
                                 
                                 {{-- รายงาน --}}
-                                <x-nav-link :href="route('staff.reports.index')" :active="request()->routeIs('staff.reports.*')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('staff.reports.index')" :active="request()->routeIs('staff.reports.*')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
@@ -98,7 +104,7 @@
                                 </x-nav-link>
                                 
                                 {{-- ผู้ใช้งาน --}}
-                                <x-nav-link :href="route('staff.users.index')" :active="request()->routeIs('staff.users.*')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('staff.users.index')" :active="request()->routeIs('staff.users.*')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                     </svg>
@@ -122,7 +128,7 @@
                             </form>
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
-                                    <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white hover:text-secondary-200 focus:outline-none transition ease-in-out duration-150">
+                                    <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-black hover:text-blue-600 focus:outline-none transition ease-in-out duration-150">
                                         <div>{{ auth()->user()->full_name }}</div>
 
                                         <div class="ms-1">
@@ -159,7 +165,7 @@
 
                         <!-- Hamburger -->
                         <div class="-me-2 flex items-center sm:hidden">
-                            <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-secondary-200 hover:bg-primary-700 focus:outline-none focus:bg-primary-700 transition duration-150 ease-in-out">
+                            <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-black hover:text-blue-600 hover:bg-primary-100 focus:outline-none focus:bg-primary-100 transition duration-150 ease-in-out">
                                 <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                     <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                                     <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -172,31 +178,31 @@
                 <!-- Responsive Navigation Menu -->
                 <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
                     <div class="pt-2 pb-3 space-y-1">
-                        <x-responsive-nav-link :href="route('staff.dashboard')" :active="request()->routeIs('staff.dashboard')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('staff.dashboard')" :active="request()->routeIs('staff.dashboard')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             Dashboard
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('staff.examinees.index')" :active="request()->routeIs('staff.examinees.*')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('staff.examinees.index')" :active="request()->routeIs('staff.examinees.*')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             จัดการผู้สมัคร
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('staff.border-areas.index')" :active="request()->routeIs('staff.border-areas.*')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('staff.border-areas.index')" :active="request()->routeIs('staff.border-areas.*')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             พื้นที่ชายแดน
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('staff.exam-sessions.index')" :active="request()->routeIs('staff.exam-sessions.*')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('staff.exam-sessions.index')" :active="request()->routeIs('staff.exam-sessions.*')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             รอบสอบ
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('staff.position-quotas.manage')" :active="request()->routeIs('staff.position-quotas.*')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('staff.position-quotas.manage')" :active="request()->routeIs('staff.position-quotas.*')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             อัตราที่เปิดสอบ
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('staff.test-locations.index')" :active="request()->routeIs('staff.test-locations.*')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('staff.test-locations.index')" :active="request()->routeIs('staff.test-locations.*')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             สถานที่สอบ
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('staff.branches.index')" :active="request()->routeIs('staff.branches.*')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('staff.branches.index')" :active="request()->routeIs('staff.branches.*')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             เหล่า
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('staff.reports.index')" :active="request()->routeIs('staff.reports.*')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('staff.reports.index')" :active="request()->routeIs('staff.reports.*')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             รายงาน
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('staff.users.index')" :active="request()->routeIs('staff.users.*')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('staff.users.index')" :active="request()->routeIs('staff.users.*')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             ผู้ใช้งาน
                         </x-responsive-nav-link>
                     </div>
@@ -204,12 +210,12 @@
                     <!-- Responsive Settings Options -->
                     <div class="pt-4 pb-1 border-t border-primary-700">
                         <div class="px-4">
-                            <div class="font-medium text-base text-white">{{ auth()->user()->full_name }}</div>
+                            <div class="font-medium text-base text-black">{{ auth()->user()->full_name }}</div>
                             <div class="font-medium text-sm text-secondary-200">{{ auth()->user()->national_id }}</div>
                         </div>
 
                         <div class="mt-3 space-y-1">
-                            <x-responsive-nav-link :href="route('profile')" class="text-white hover:bg-primary-700">
+                            <x-responsive-nav-link :href="route('profile')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                                 ข้อมูลส่วนตัว
                             </x-responsive-nav-link>
 
@@ -219,7 +225,7 @@
                                 <x-responsive-nav-link :href="route('logout')"
                                         onclick="event.preventDefault();
                                                 this.closest('form').submit();"
-                                        class="text-white hover:bg-primary-700">
+                                        class="text-black hover:text-blue-600 hover:bg-blue-50">
                                     ออกจากระบบ
                                 </x-responsive-nav-link>
                             </form>

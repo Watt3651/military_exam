@@ -16,14 +16,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <x-input-label for="year" value="ปีการสอบ (พ.ศ.)" />
-                        <x-text-input id="year" wire:model="year" type="number" class="block mt-1 w-full" placeholder="เช่น 2569" />
+                        <x-text-input id="year" wire:model="year" type="number" class="block mt-1 w-full"
+                            placeholder="เช่น 2569" />
                         <x-input-error :messages="$errors->get('year')" class="mt-2" />
                     </div>
 
                     <div>
                         <x-input-label for="exam_level" value="ระดับการสอบ" />
                         <select id="exam_level" wire:model="exam_level"
-                                class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
                             <option value="sergeant_major">จ่าเอก</option>
                             <option value="master_sergeant">พันจ่าเอก</option>
                         </select>
@@ -32,13 +33,15 @@
 
                     <div>
                         <x-input-label for="registration_start" value="วันเริ่มรับสมัคร" />
-                        <x-text-input id="registration_start" wire:model="registration_start" type="date" class="block mt-1 w-full" />
+                        <x-text-input id="registration_start" wire:model="registration_start" type="date"
+                            class="block mt-1 w-full" />
                         <x-input-error :messages="$errors->get('registration_start')" class="mt-2" />
                     </div>
 
                     <div>
                         <x-input-label for="registration_end" value="วันปิดรับสมัคร" />
-                        <x-text-input id="registration_end" wire:model="registration_end" type="date" class="block mt-1 w-full" />
+                        <x-text-input id="registration_end" wire:model="registration_end" type="date"
+                            class="block mt-1 w-full" />
                         <x-input-error :messages="$errors->get('registration_end')" class="mt-2" />
                     </div>
 
@@ -51,7 +54,8 @@
                     <div>
                         <x-input-label for="is_active" value="สถานะ" />
                         <label class="mt-2 inline-flex items-center gap-2 text-sm text-gray-700">
-                            <input id="is_active" type="checkbox" wire:model="is_active" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                            <input id="is_active" type="checkbox" wire:model="is_active"
+                                class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
                             เปิดใช้งาน
                         </label>
                         <x-input-error :messages="$errors->get('is_active')" class="mt-2" />
@@ -60,13 +64,14 @@
 
                 <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
                     <a href="{{ route('staff.exam-sessions.index') }}" wire:navigate
-                       class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50">
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50">
                         กลับหน้ารายการ
                     </a>
                     <button type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md text-xs font-semibold text-white uppercase tracking-widest hover:bg-primary-700 disabled:opacity-50"
-                            wire:loading.attr="disabled">
-                        บันทึกข้อมูล
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50"
+                        wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="save">บันทึกข้อมูล</span>
+                        <span wire:loading wire:target="save">กำลังบันทึก...</span>
                     </button>
                 </div>
             </form>

@@ -26,32 +26,34 @@
                     </div>
                     <div>
                         <x-input-label for="capacity" value="จำนวนที่รับได้" />
-                        <x-text-input id="capacity" wire:model="capacity" type="number" min="0" class="block mt-1 w-full" />
+                        <x-text-input id="capacity" wire:model="capacity" type="number" min="0"
+                            class="block mt-1 w-full" />
                         <x-input-error :messages="$errors->get('capacity')" class="mt-2" />
                     </div>
                     <div>
                         <x-input-label for="is_active" value="สถานะ" />
                         <label class="mt-2 inline-flex items-center gap-2 text-sm text-gray-700">
-                            <input id="is_active" type="checkbox" wire:model="is_active" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                            <input id="is_active" type="checkbox" wire:model="is_active"
+                                class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
                             เปิดใช้งาน
                         </label>
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="address" value="ที่อยู่" />
                         <textarea id="address" wire:model="address" rows="3"
-                                  class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
+                            class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
                         <x-input-error :messages="$errors->get('address')" class="mt-2" />
                     </div>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
                     <a href="{{ route('staff.test-locations.index') }}" wire:navigate
-                       class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50">
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50">
                         กลับหน้ารายการ
                     </a>
                     <button type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md text-xs font-semibold text-white uppercase tracking-widest hover:bg-primary-700 disabled:opacity-50"
-                            wire:loading.attr="disabled">
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50"
+                        wire:loading.attr="disabled">
                         บันทึกการแก้ไข
                     </button>
                 </div>

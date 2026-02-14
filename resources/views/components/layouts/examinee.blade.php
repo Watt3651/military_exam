@@ -25,31 +25,31 @@
                             <div class="shrink-0 flex items-center">
                                 <a href="{{ route('examinee.dashboard') }}" class="flex items-center">
                                     <x-application-logo class="block h-9 w-auto fill-current text-white" />
-                                    <span class="ml-3 text-white font-bold text-lg hidden sm:block">ผู้เข้าสอบ</span>
+                                    <span class="ml-3 text-black font-bold text-lg hidden sm:block">ผู้เข้าสอบ</span>
                                 </a>
                             </div>
 
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <x-nav-link :href="route('examinee.dashboard')" :active="request()->routeIs('examinee.dashboard')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('examinee.dashboard')" :active="request()->routeIs('examinee.dashboard')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                     </svg>
                                     หน้าหลัก
                                 </x-nav-link>
-                                <x-nav-link :href="route('examinee.register-exam')" :active="request()->routeIs('examinee.register-exam')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('examinee.register-exam')" :active="request()->routeIs('examinee.register-exam')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                     ลงทะเบียนสอบ
                                 </x-nav-link>
-                                <x-nav-link :href="route('examinee.profile')" :active="request()->routeIs('examinee.profile')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('examinee.profile')" :active="request()->routeIs('examinee.profile')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                     </svg>
                                     ข้อมูลส่วนตัว
                                 </x-nav-link>
-                                <x-nav-link :href="route('examinee.history')" :active="request()->routeIs('examinee.history')" class="text-white hover:text-secondary-200 border-secondary-300">
+                                <x-nav-link :href="route('examinee.history')" :active="request()->routeIs('examinee.history')" class="text-black hover:text-blue-600 border-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -73,7 +73,7 @@
                             </form>
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
-                                    <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white hover:text-secondary-200 focus:outline-none transition ease-in-out duration-150">
+                                    <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-black hover:text-blue-600 focus:outline-none transition ease-in-out duration-150">
                                         <div>{{ auth()->user()->full_name }}</div>
 
                                         <div class="ms-1">
@@ -110,7 +110,7 @@
 
                         <!-- Hamburger -->
                         <div class="-me-2 flex items-center sm:hidden">
-                            <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-secondary-200 hover:bg-primary-700 focus:outline-none focus:bg-primary-700 focus:text-secondary-200 transition duration-150 ease-in-out">
+                            <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-black hover:text-blue-600 hover:bg-primary-100 focus:outline-none focus:bg-primary-100 transition duration-150 ease-in-out">
                                 <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                     <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                                     <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -123,16 +123,16 @@
                 <!-- Responsive Navigation Menu -->
                 <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
                     <div class="pt-2 pb-3 space-y-1">
-                        <x-responsive-nav-link :href="route('examinee.dashboard')" :active="request()->routeIs('examinee.dashboard')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('examinee.dashboard')" :active="request()->routeIs('examinee.dashboard')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             หน้าหลัก
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('examinee.register-exam')" :active="request()->routeIs('examinee.register-exam')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('examinee.register-exam')" :active="request()->routeIs('examinee.register-exam')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             ลงทะเบียนสอบ
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('examinee.profile')" :active="request()->routeIs('examinee.profile')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('examinee.profile')" :active="request()->routeIs('examinee.profile')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             ข้อมูลส่วนตัว
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('examinee.history')" :active="request()->routeIs('examinee.history')" class="text-white hover:bg-primary-700">
+                        <x-responsive-nav-link :href="route('examinee.history')" :active="request()->routeIs('examinee.history')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                             ประวัติการสอบ
                         </x-responsive-nav-link>
                     </div>
@@ -140,12 +140,12 @@
                     <!-- Responsive Settings Options -->
                     <div class="pt-4 pb-1 border-t border-primary-700">
                         <div class="px-4">
-                            <div class="font-medium text-base text-white">{{ auth()->user()->full_name }}</div>
+                            <div class="font-medium text-base text-black">{{ auth()->user()->full_name }}</div>
                             <div class="font-medium text-sm text-secondary-200">{{ auth()->user()->national_id }}</div>
                         </div>
 
                         <div class="mt-3 space-y-1">
-                            <x-responsive-nav-link :href="route('profile')" class="text-white hover:bg-primary-700">
+                            <x-responsive-nav-link :href="route('profile')" class="text-black hover:text-blue-600 hover:bg-blue-50">
                                 ข้อมูลส่วนตัว
                             </x-responsive-nav-link>
 
@@ -155,7 +155,7 @@
                                 <x-responsive-nav-link :href="route('logout')"
                                         onclick="event.preventDefault();
                                                 this.closest('form').submit();"
-                                        class="text-white hover:bg-primary-700">
+                                        class="text-black hover:text-blue-600 hover:bg-blue-50">
                                     ออกจากระบบ
                                 </x-responsive-nav-link>
                             </form>
