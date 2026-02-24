@@ -30,14 +30,16 @@
 
                     <div>
                         <x-input-label for="special_score" value="คะแนนพิเศษ" />
-                        <x-text-input id="special_score" wire:model="special_score" class="block mt-1 w-full" type="number" min="0" max="99.99" step="0.01" />
+                        <x-text-input id="special_score" wire:model="special_score" class="block mt-1 w-full"
+                            type="number" min="0" max="99.99" step="0.01" />
                         <x-input-error :messages="$errors->get('special_score')" class="mt-2" />
                     </div>
 
                     <div>
                         <x-input-label for="is_active" value="สถานะใช้งาน" />
                         <label class="mt-2 inline-flex items-center gap-2 text-sm text-gray-700">
-                            <input id="is_active" type="checkbox" wire:model="is_active" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                            <input id="is_active" type="checkbox" wire:model="is_active"
+                                class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
                             เปิดใช้งาน
                         </label>
                         <x-input-error :messages="$errors->get('is_active')" class="mt-2" />
@@ -46,28 +48,29 @@
                     <div class="md:col-span-2">
                         <x-input-label for="description" value="รายละเอียด" />
                         <textarea id="description" wire:model="description" rows="3"
-                                  class="block mt-1 w-full border-gray-300 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
-                                  placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"></textarea>
+                            class="block mt-1 w-full border-gray-300 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
+                            placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"></textarea>
                         <x-input-error :messages="$errors->get('description')" class="mt-2" />
                     </div>
 
                     <div class="md:col-span-2">
-                        <x-input-label for="reason" value="เหตุผลในการเปลี่ยนแปลงคะแนน (จำเป็นเมื่อมีการเปลี่ยนคะแนน)" />
+                        <x-input-label for="reason"
+                            value="เหตุผลในการเปลี่ยนแปลงคะแนน (จำเป็นเมื่อมีการเปลี่ยนคะแนน)" />
                         <textarea id="reason" wire:model="reason" rows="2"
-                                  class="block mt-1 w-full border-gray-300 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
-                                  placeholder="ระบุเหตุผลเมื่อมีการปรับคะแนนพิเศษ"></textarea>
+                            class="block mt-1 w-full border-gray-300 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
+                            placeholder="ระบุเหตุผลเมื่อมีการปรับคะแนนพิเศษ"></textarea>
                         <x-input-error :messages="$errors->get('reason')" class="mt-2" />
                     </div>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
                     <a href="{{ route('staff.border-areas.index') }}"
-                       class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50">
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50">
                         ย้อนกลับ
                     </a>
                     <button type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md text-xs font-semibold text-white uppercase tracking-widest hover:bg-primary-700 disabled:opacity-50"
-                            wire:loading.attr="disabled">
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50"
+                        wire:loading.attr="disabled">
                         บันทึกการแก้ไข
                     </button>
                 </div>
@@ -84,11 +87,16 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">คะแนนเดิม</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">คะแนนใหม่</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผู้แก้ไข</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เหตุผล</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                วันที่</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                คะแนนเดิม</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                คะแนนใหม่</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ผู้แก้ไข</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                เหตุผล</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
