@@ -14,7 +14,7 @@
                         ยินดีต้อนรับ, {{ auth()->user()->full_name }}
                     </h3>
                     <p class="text-gray-600">
-                        ระบบสอบเลื่อนฐานะทหาร
+                        ระบบสอบเลื่อนฐานะ นย.
                     </p>
                 </div>
             </div>
@@ -40,11 +40,14 @@
                             <dt class="text-sm font-medium text-gray-500">บทบาท</dt>
                             <dd class="mt-1">
                                 @if(auth()->user()->role === 'examinee')
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">ผู้เข้าสอบ</span>
+                                    <span
+                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">ผู้เข้าสอบ</span>
                                 @elseif(auth()->user()->role === 'staff')
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">เจ้าหน้าที่</span>
+                                    <span
+                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">เจ้าหน้าที่</span>
                                 @elseif(auth()->user()->role === 'commander')
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">ผู้บังคับบัญชา</span>
+                                    <span
+                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">ผู้บังคับบัญชา</span>
                                 @endif
                             </dd>
                         </div>
