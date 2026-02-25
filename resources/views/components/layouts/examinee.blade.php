@@ -19,7 +19,7 @@
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-gray-100">
         {{-- Examinee Navigation --}}
-        <nav x-data="{ open: false }" class="menu-nav bg-dark-600 border-b border-primary-700 shadow-lg">
+        <nav x-data="{ open: false }" class="menu-nav bg-blue-500 border-b border-primary-700 shadow-lg">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex">
@@ -75,9 +75,9 @@
                     <!-- Settings Dropdown -->
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
                         <span class="text-secondary-100 text-sm mr-4">
-                            <span class="px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
+                            {{-- <span class="px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
                                 ผู้เข้าสอบ
-                            </span>
+                            </span> --}}
                         </span>
                         <form method="POST" action="{{ route('logout') }}" class="mr-3">
                             @csrf
