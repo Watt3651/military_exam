@@ -60,11 +60,11 @@
 
                 <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
                     <a href="{{ route('staff.exam-sessions.index') }}" wire:navigate
-                       class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50">
+                       class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-red-100">
                         กลับหน้ารายการ
                     </a>
                     <button type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md text-xs font-semibold text-white uppercase tracking-widest hover:bg-primary-700 disabled:opacity-50"
+                            class="inline-flex items-center px-4 py-2 bg-green border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-green-100"
                             wire:loading.attr="disabled">
                         <span wire:loading.remove wire:target="save">บันทึกข้อมูล</span>
                         <span wire:loading wire:target="save">กำลังบันทึก...</span>

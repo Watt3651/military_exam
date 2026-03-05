@@ -31,7 +31,7 @@ new #[Layout('layouts.guest')] class extends Component
             เข้าสู่ระบบ
         </h2>
         <p class="mt-2 text-sm text-gray-600">
-            ระบบสอบเลื่อนฐานะทหาร
+            ระบบสอบเลื่อนฐานะ นย.
         </p>
     </div>
 

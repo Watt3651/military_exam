@@ -12,7 +12,7 @@ test('test_examinee_can_register', function () {
 
     Livewire::test(RegisterComponent::class)
         ->set('national_id', '1234567890123')
-        ->set('rank', 'ส.อ.')
+        ->set('rank', 'จ.อ.')
         ->set('first_name', 'สมชาย')
         ->set('last_name', 'ใจดี')
         ->set('password', 'password')

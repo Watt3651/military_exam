@@ -23,8 +23,8 @@
                         <x-application-logo class="w-20 h-20 fill-current text-primary-600" />
                     </div>
                     <div class="mt-3 text-center">
-                        <h1 class="text-2xl font-bold text-primary-700">ระบบสอบเลื่อนฐานะทหาร</h1>
-                        <p class="text-sm text-gray-600 mt-1">Military Promotion Exam System</p>
+                        <h1 class="text-2xl font-bold text-primary-700">ระบบสอบเลื่อนฐานะ นย.</h1>
+                        <p class="text-sm text-gray-600 mt-1">RTMC Promotion Exam System</p>
                     </div>
                 </a>
             </div>
@@ -37,10 +37,10 @@
             {{-- Footer --}}
             <div class="mt-8 text-center">
                 <p class="text-sm text-gray-600">
-                    © {{ date('Y') }} ระบบสอบเลื่อนฐานะทหาร
+                    © {{ date('Y') }} ระบบสอบเลื่อนฐานะ นย.
                 </p>
                 <p class="text-xs text-gray-500 mt-1">
-                    พัฒนาโดย กองทัพไทย
+                    พัฒนาโดย น.ท.ภาณุวัฒน์ มีคุณ
                 </p>
             </div>
         </div>

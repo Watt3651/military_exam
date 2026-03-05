@@ -12,7 +12,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.guest')]
-#[Title('สมัครสมาชิก - ระบบสอบเลื่อนฐานะทหาร')]
+#[Title('สมัครสมาชิก - ระบบสอบเลื่อนฐานะ นย.')]
 class Register extends Component
 {
     /**
@@ -163,7 +163,7 @@ class Register extends Component
         Auth::login($user);
 
         // Flash success message
-        session()->flash('success', 'สมัครสมาชิกสำเร็จ! ยินดีต้อนรับเข้าสู่ระบบสอบเลื่อนฐานะทหาร');
+        session()->flash('success', 'สมัครสมาชิกสำเร็จ! ยินดีต้อนรับเข้าสู่ระบบสอบเลื่อนฐานะ นย.');
 
         // Redirect to dashboard
         return $this->redirect(route('dashboard'), navigate: true);
