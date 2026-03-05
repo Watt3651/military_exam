@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Staff\Users\CreateUser;
+use App\Livewire\Staff\Users\EditUser;
 use App\Livewire\Staff\Dashboard as StaffDashboard;
 use App\Livewire\Staff\Reports\Index as StaffReportsIndex;
 use App\Livewire\Staff\Branches\Create as CreateBranch;
@@ -178,10 +179,23 @@ Route::middleware(['auth', 'role:staff'])
         Route::prefix('users')->name('users.')->group(function () {
             // รายการผู้ใช้งานทั้งหมด
             Route::get('/', function () {
-                return view('staff.users.index');
+                $users = \App\Models\User::whereIn('role', ['staff', 'commander'])
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(15);
+                return view('staff.users.index', compact('users'));
             })->name('index');
 
             // สร้างผู้ใช้งาน (Staff/Commander)
             Route::get('/create', CreateUser::class)->name('create');
+
+            // แก้ไขผู้ใช้งาน
+            Route::get('/{id}/edit', EditUser::class)->name('edit');
+
+            // ลบผู้ใช้งาน
+            Route::delete('/{id}', function ($id) {
+                $user = \App\Models\User::findOrFail($id);
+                $user->delete();
+                return redirect()->route('staff.users.index')->with('success', 'ลบผู้ใช้สำเร็จ');
+            })->name('destroy');
         });
     });

@@ -28,7 +28,7 @@ use Livewire\Component;
  *   - คำนวณคะแนนอัตโนมัติ (pending_score + special_score)
  */
 #[Layout('components.layouts.examinee')]
-#[Title('ลงทะเบียนสอบ - ระบบสอบเลื่อนฐานะทหาร')]
+#[Title('ลงทะเบียนสอบ - ระบบสอบเลื่อนฐานะ นย.')]
 class ExamRegistration extends Component
 {
     // ─── Form Fields (Section 2.2.1) ───

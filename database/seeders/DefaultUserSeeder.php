@@ -29,7 +29,7 @@ class DefaultUserSeeder extends Seeder
         $staff = User::updateOrCreate(
             ['national_id' => '1000000000001'],
             [
-                'rank' => 'จ.ส.อ.',
+                'rank' => 'พ.จ.อ.',
                 'first_name' => 'Admin',
                 'last_name' => 'System',
                 'email' => 'admin@exam.military.th',
@@ -48,7 +48,7 @@ class DefaultUserSeeder extends Seeder
         $commander = User::updateOrCreate(
             ['national_id' => '1000000000002'],
             [
-                'rank' => 'พ.อ.',
+                'rank' => 'น.อ.',
                 'first_name' => 'Commander',
                 'last_name' => 'System',
                 'email' => 'commander@exam.military.th',
@@ -67,7 +67,7 @@ class DefaultUserSeeder extends Seeder
         $examineeUser = User::updateOrCreate(
             ['national_id' => '1234567890123'],
             [
-                'rank' => 'ส.อ.',
+                'rank' => 'จ.อ.',
                 'first_name' => 'สมชาย',
                 'last_name' => 'ทดสอบ',
                 'email' => null,
@@ -83,7 +83,7 @@ class DefaultUserSeeder extends Seeder
         Examinee::updateOrCreate(
             ['user_id' => $examineeUser->id],
             [
-                'position' => 'ผบ.หมู่ ร้อย.อาวุธเบา',
+                'position' => 'เสมียนแผนกกำลังพล',
                 'branch_id' => 1, // ทหารราบ (code: 1)
                 'age' => 28,
                 'eligible_year' => 2567,

@@ -13,7 +13,7 @@
                     <p class="mt-1 text-sm text-gray-500">แสดงรอบสอบทั้งหมด พร้อมสถานะ active / archived</p>
                 </div>
                 <a href="{{ route('staff.exam-sessions.create') }}" wire:navigate
-                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50">
+                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-green-100">
                     สร้างรอบสอบใหม่
                 </a>
             </div>

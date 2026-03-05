@@ -41,7 +41,7 @@
                             <h3 class="text-2xl font-bold text-blue-500 mb-1">
                                 ยินดีต้อนรับ, {{ auth()->user()->full_name }}
                             </h3>
-                            <p class="text-primary-100 text-sm">ระบบสอบเลื่อนฐานะทหาร</p>
+                            <p class="text-primary-100 text-sm">ระบบสอบเลื่อนฐานะ นย.</p>
                         </div>
                         <div class="hidden sm:block">
                             <div class="w-16 h-16 bg-black rounded-full flex items-center justify-center">
