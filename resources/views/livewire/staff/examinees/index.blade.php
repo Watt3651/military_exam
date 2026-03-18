@@ -18,7 +18,7 @@
             </div>
 
             <div class="p-6 border-b border-gray-100 bg-gray-50">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
                     <div>
                         <label class="block text-xs text-gray-500 mb-1">ชื่อ</label>
                         <input type="text" wire:model.live.debounce.300ms="searchName"
@@ -43,6 +43,15 @@
                             @foreach ($this->testLocations as $location)
                                 <option value="{{ $location->id }}">{{ $location->code }} - {{ $location->name }}</option>
                             @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">ระดับการสอบ</label>
+                        <select wire:model.live="examLevelFilter"
+                                class="w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500 text-sm">
+                            <option value="">ทั้งหมด</option>
+                            <option value="{{ \App\Models\ExamSession::LEVEL_SERGEANT_MAJOR }}">{{ \App\Models\ExamSession::LEVEL_LABELS[\App\Models\ExamSession::LEVEL_SERGEANT_MAJOR] }}</option>
+                            <option value="{{ \App\Models\ExamSession::LEVEL_MASTER_SERGEANT }}">{{ \App\Models\ExamSession::LEVEL_LABELS[\App\Models\ExamSession::LEVEL_MASTER_SERGEANT] }}</option>
                         </select>
                     </div>
                     <div>

@@ -77,8 +77,8 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-500 mb-1">สถานะการลงทะเบียน</label>
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                                    {{ $registrationStatus === 'ยืนยันแล้ว' ? 'bg-green-100 text-green-800' : '' }}
-                                    {{ $registrationStatus === 'รอดำเนินการ' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                    {{ $registrationStatus === 'ยืนยันการสมัครแล้ว' ? 'bg-green-100 text-green-800' : '' }}
+                                    {{ $registrationStatus === 'รอยืนยันการสมัคร' ? 'bg-yellow-100 text-yellow-800' : '' }}
                                     {{ $registrationStatus === 'ยกเลิก' ? 'bg-red-100 text-red-800' : '' }}">
                                     {{ $registrationStatus }}
                                 </span>

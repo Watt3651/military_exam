@@ -224,8 +224,8 @@ class ReportGenerator
                         return [
                             'location_name' => $locationName,
                             'total' => $items->count(),
-                            'confirmed' => $items->where('status', ExamRegistration::STATUS_CONFIRMED)->count(),
-                            'pending' => $items->where('status', ExamRegistration::STATUS_PENDING)->count(),
+                            'numbered' => $items->whereNotNull('exam_number')->count(),
+                            'waiting_number' => $items->filter(fn (ExamRegistration $registration): bool => $registration->status === ExamRegistration::STATUS_CONFIRMED && empty($registration->exam_number))->count(),
                             'cancelled' => $items->where('status', ExamRegistration::STATUS_CANCELLED)->count(),
                         ];
                     })
@@ -233,16 +233,18 @@ class ReportGenerator
                     ->map(fn (array $row): array => [
                         $row['location_name'],
                         (string) $row['total'],
-                        (string) $row['confirmed'],
-                        (string) $row['pending'],
+                        (string) $row['numbered'],
+                        (string) $row['waiting_number'],
                         (string) $row['cancelled'],
                     ])
                     ->values();
 
                 $summaryRows = collect([
                     ['จำนวนผู้สมัครทั้งหมด', (string) $this->registrations->count()],
-                    ['ยืนยันแล้ว', (string) $this->registrations->where('status', ExamRegistration::STATUS_CONFIRMED)->count()],
-                    ['รอออกหมายเลข', (string) $this->registrations->where('status', ExamRegistration::STATUS_PENDING)->count()],
+                    ['ยืนยันการสมัครแล้ว', (string) $this->registrations->where('status', ExamRegistration::STATUS_CONFIRMED)->count()],
+                    ['ออกหมายเลขแล้ว', (string) $this->registrations->whereNotNull('exam_number')->count()],
+                    ['ยืนยันแล้วแต่ยังไม่มีหมายเลขสอบ', (string) $this->registrations->filter(fn (ExamRegistration $registration): bool => $registration->status === ExamRegistration::STATUS_CONFIRMED && empty($registration->exam_number))->count()],
+                    ['รอยืนยันการสมัคร', (string) $this->registrations->where('status', ExamRegistration::STATUS_PENDING)->count()],
                     ['ยกเลิก', (string) $this->registrations->where('status', ExamRegistration::STATUS_CANCELLED)->count()],
                 ]);
 
@@ -288,7 +290,7 @@ class ReportGenerator
 
                         public function headings(): array
                         {
-                            return ['สถานที่สอบ', 'ทั้งหมด', 'ยืนยันแล้ว', 'รอออกหมายเลข', 'ยกเลิก'];
+                            return ['สถานที่สอบ', 'ทั้งหมด', 'ออกหมายเลขแล้ว', 'ยืนยันแล้วแต่ยังไม่มีหมายเลขสอบ', 'ยกเลิก'];
                         }
                     },
                     new class($summaryRows) implements FromCollection, WithHeadings, ShouldAutoSize {

@@ -15,7 +15,7 @@
             <div class="p-6 border-b border-gray-100">
                 <h2 class="text-xl font-semibold text-gray-900">สร้างหมายเลขสอบ</h2>
                 <p class="mt-1 text-sm text-gray-500">
-                    ระบบจะสร้างเลขรูปแบบ XYZNN ตามกลุ่มสถานที่สอบ + เหล่า และเรียงชื่อผู้สมัครก่อนยืนยันเลข
+                    ระบบจะสร้างเลขรูปแบบ XYZNN ให้เฉพาะผู้สมัครที่ยืนยันการสมัครแล้วและยังไม่มีหมายเลขสอบ
                 </p>
             </div>
 
@@ -37,8 +37,8 @@
 
                     <div class="md:col-span-1">
                         <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
-                            <p class="text-xs text-blue-700">ผู้สมัครที่รอออกหมายเลข</p>
-                            <p class="text-2xl font-bold text-blue-900">{{ $this->pendingCount }}</p>
+                            <p class="text-xs text-blue-700">ยืนยันแล้ว แต่ยังไม่มีหมายเลขสอบ</p>
+                            <p class="text-2xl font-bold text-blue-900">{{ $this->readyCount }}</p>
                         </div>
                     </div>
                 </div>
@@ -62,7 +62,7 @@
                 <div class="flex items-center justify-end">
                     <button type="submit"
                         class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50"
-                        wire:loading.attr="disabled" @disabled($this->pendingCount === 0)>
+                        wire:loading.attr="disabled" @disabled($this->readyCount === 0)>
                         <span wire:loading.remove wire:target="generate">สร้างหมายเลขสอบ</span>
                         <span wire:loading wire:target="generate">กำลังดำเนินการ...</span>
                     </button>
@@ -108,7 +108,7 @@
                         @empty
                             <tr>
                                 <td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500">
-                                    ไม่มีข้อมูล preview (อาจยังไม่มีผู้สมัครสถานะ pending ในรอบสอบที่เลือก)
+                                    ไม่มีข้อมูล preview (อาจยังไม่มีผู้สมัครที่ยืนยันการสมัครแล้วและยังไม่มีหมายเลขสอบในรอบสอบที่เลือก)
                                 </td>
                             </tr>
                         @endforelse

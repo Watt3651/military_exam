@@ -24,26 +24,27 @@ use RuntimeException;
 class ExamNumberGenerator
 {
     /**
-     * Generate หมายเลขสอบให้ผู้สมัครที่อยู่สถานะ pending ของรอบสอบที่กำหนด
+     * Generate หมายเลขสอบให้ผู้สมัครที่ยืนยันการสมัครแล้วและยังไม่มีหมายเลขสอบของรอบสอบที่กำหนด
      *
      * Algorithm:
-     * 1) ดึง exam_registrations ที่ status = pending ของ exam_session ที่ระบุ
+     * 1) ดึง exam_registrations ที่ status = confirmed และ exam_number ยังว่าง ของ exam_session ที่ระบุ
      * 2) Group ตาม (test_location.code, branch.code)
      * 3) Sort ตาม user.first_name ASC ภายในแต่ละ group
      * 4) สร้างหมายเลขสอบรูปแบบ XYZNN
-     * 5) อัปเดต exam_number + เปลี่ยนสถานะเป็น confirmed
+     * 5) อัปเดตเฉพาะ exam_number
      * 6) คืนค่าจำนวนรายการที่อัปเดต
      *
      * @param  int  $examSessionId  id ของรอบสอบที่ต้องการ generate เลข
-     * @return int  จำนวนผู้สมัครที่ถูก generate เลขและยืนยันสถานะแล้ว
+     * @return int  จำนวนผู้สมัครที่ถูก generate เลข
      */
     public function generate(int $examSessionId): int
     {
         return DB::transaction(function () use ($examSessionId): int {
-            // Step 1: ดึงรายการ pending พร้อม relation ที่ใช้ใน algorithm
+            // Step 1: ดึงรายการที่ยืนยันแล้วและยังไม่มีเลขสอบ พร้อม relation ที่ใช้ใน algorithm
             $pendingRegistrations = ExamRegistration::query()
                 ->where('exam_session_id', $examSessionId)
-                ->where('status', ExamRegistration::STATUS_PENDING)
+                ->where('status', ExamRegistration::STATUS_CONFIRMED)
+                ->whereNull('exam_number')
                 ->with([
                     'testLocation:id,code',
                     'examinee:id,user_id,branch_id',
@@ -82,7 +83,7 @@ class ExamNumberGenerator
                 // หา sequence ล่าสุดของ prefix เดิมในรอบสอบนี้ เพื่อกันเลขซ้ำเมื่อรันหลายครั้ง
                 $sequence = $this->getCurrentMaxSequence($examSessionId, $locationCode, $branchCode);
 
-                // Step 4 + 5: Generate หมายเลข XYZNN แล้ว update exam_number + status=confirmed
+                // Step 4 + 5: Generate หมายเลข XYZNN แล้ว update เฉพาะ exam_number
                 foreach ($sorted as $registration) {
                     $sequence++;
 
@@ -96,7 +97,6 @@ class ExamNumberGenerator
 
                     $registration->update([
                         'exam_number' => $examNumber,
-                        'status' => ExamRegistration::STATUS_CONFIRMED,
                     ]);
 
                     $updatedCount++;

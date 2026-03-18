@@ -24,6 +24,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *   NN = ลำดับ (01-99)
  *
  * Status flow: pending → confirmed → (cancelled)
+ * exam_number เป็นคนละแกนข้อมูล ใช้บอกว่ามีหมายเลขสอบแล้วหรือยัง
  *
  * @property int $id
  * @property int $examinee_id FK examinees
@@ -77,10 +78,10 @@ class ExamRegistration extends Model
     |--------------------------------------------------------------------------
     */
 
-    /** @var string รอดำเนินการ */
+    /** @var string รอการยืนยันการสมัคร */
     public const STATUS_PENDING = 'pending';
 
-    /** @var string ยืนยันแล้ว */
+    /** @var string ยืนยันการสมัครแล้ว */
     public const STATUS_CONFIRMED = 'confirmed';
 
     /** @var string ยกเลิก */
@@ -88,8 +89,8 @@ class ExamRegistration extends Model
 
     /** @var array<string, string> ชื่อสถานะภาษาไทย */
     public const STATUS_LABELS = [
-        self::STATUS_PENDING => 'รอดำเนินการ',
-        self::STATUS_CONFIRMED => 'ยืนยันแล้ว',
+        self::STATUS_PENDING => 'รอยืนยันการสมัคร',
+        self::STATUS_CONFIRMED => 'ยืนยันการสมัครแล้ว',
         self::STATUS_CANCELLED => 'ยกเลิก',
     ];
 
@@ -231,13 +232,13 @@ class ExamRegistration extends Model
     |--------------------------------------------------------------------------
     */
 
-    /** ตรวจสอบว่ายังรอดำเนินการ */
+    /** ตรวจสอบว่ายังรอยืนยันการสมัคร */
     public function isPending(): bool
     {
         return $this->status === self::STATUS_PENDING;
     }
 
-    /** ตรวจสอบว่ายืนยันแล้ว */
+    /** ตรวจสอบว่ายืนยันการสมัครแล้ว */
     public function isConfirmed(): bool
     {
         return $this->status === self::STATUS_CONFIRMED;

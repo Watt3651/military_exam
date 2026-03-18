@@ -119,7 +119,7 @@ class Dashboard extends Component
         return [
             'total' => $registrations->count(),
             'confirmed' => $registrations->where('status', ExamRegistration::STATUS_CONFIRMED)->count(),
-            'pending' => $registrations->where('status', ExamRegistration::STATUS_PENDING)->count(),
+            'pending' => $registrations->filter(fn (ExamRegistration $registration): bool => $registration->status === ExamRegistration::STATUS_CONFIRMED && empty($registration->exam_number))->count(),
         ];
     }
 
@@ -264,12 +264,12 @@ class Dashboard extends Component
             })
             ->when($this->testLocationFilter !== '', fn ($q) => $q->where('test_location_id', (int) $this->testLocationFilter))
             ->when($this->branchFilter !== '', fn ($q) => $q->whereHas('examinee', fn ($subQ) => $subQ->where('branch_id', (int) $this->branchFilter)))
-            ->get(['id', 'status']);
+            ->get(['id', 'status', 'exam_number']);
 
         return [
             'total' => $rows->count(),
             'confirmed' => $rows->where('status', ExamRegistration::STATUS_CONFIRMED)->count(),
-            'pending' => $rows->where('status', ExamRegistration::STATUS_PENDING)->count(),
+            'pending' => $rows->filter(fn (ExamRegistration $registration): bool => $registration->status === ExamRegistration::STATUS_CONFIRMED && empty($registration->exam_number))->count(),
         ];
     }
 

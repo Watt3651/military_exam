@@ -119,8 +119,8 @@
                     <div>
                         <x-input-label for="registration_status" value="สถานะการลงทะเบียน" />
                         <select id="registration_status" wire:model="registration_status" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                            <option value="pending">รอดำเนินการ</option>
-                            <option value="confirmed">ยืนยันแล้ว</option>
+                            <option value="pending">รอยืนยันการสมัคร</option>
+                            <option value="confirmed">ยืนยันการสมัครแล้ว</option>
                             <option value="cancelled">ยกเลิก</option>
                         </select>
                         <x-input-error :messages="$errors->get('registration_status')" class="mt-2" />

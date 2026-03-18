@@ -69,7 +69,7 @@ class Generate extends Component
     }
 
     #[Computed]
-    public function pendingCount(): int
+    public function readyCount(): int
     {
         if (! $this->exam_session_id) {
             return 0;
@@ -77,7 +77,8 @@ class Generate extends Component
 
         return ExamRegistration::query()
             ->where('exam_session_id', $this->exam_session_id)
-            ->where('status', ExamRegistration::STATUS_PENDING)
+            ->where('status', ExamRegistration::STATUS_CONFIRMED)
+            ->whereNull('exam_number')
             ->count();
     }
 
@@ -97,7 +98,8 @@ class Generate extends Component
 
         $pendingRegistrations = ExamRegistration::query()
             ->where('exam_session_id', $this->exam_session_id)
-            ->where('status', ExamRegistration::STATUS_PENDING)
+            ->where('status', ExamRegistration::STATUS_CONFIRMED)
+            ->whereNull('exam_number')
             ->with([
                 'testLocation:id,code',
                 'examinee:id,user_id,branch_id',
@@ -165,10 +167,10 @@ class Generate extends Component
         if ($generatedCount > 0) {
             session()->flash('success', "สร้างหมายเลขสอบสำเร็จ {$generatedCount} รายการ");
         } else {
-            session()->flash('error', 'ไม่พบผู้สมัครสถานะรอออกหมายเลขในรอบสอบที่เลือก');
+            session()->flash('error', 'ไม่พบผู้สมัครที่ยืนยันการสมัครแล้วและยังไม่มีหมายเลขสอบในรอบสอบที่เลือก');
         }
 
-        unset($this->pendingCount, $this->previewItems);
+        unset($this->readyCount, $this->previewItems);
     }
 
     private function getCurrentMaxSequence(int $examSessionId, string $locationCode, string $branchCode): int

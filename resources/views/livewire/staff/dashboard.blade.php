@@ -70,11 +70,11 @@
                 <p class="mt-2 text-3xl font-bold text-gray-900">{{ $this->summary['total'] }}</p>
             </div>
             <div class="bg-white shadow-sm sm:rounded-lg border border-gray-100 p-6">
-                <p class="text-sm font-medium text-gray-500">จำนวนที่ออกหมายเลขแล้ว</p>
+                <p class="text-sm font-medium text-gray-500">จำนวนที่ยืนยันการสมัครแล้ว</p>
                 <p class="mt-2 text-3xl font-bold text-green-700">{{ $this->summary['confirmed'] }}</p>
             </div>
             <div class="bg-white shadow-sm sm:rounded-lg border border-gray-100 p-6">
-                <p class="text-sm font-medium text-gray-500">จำนวนที่รอออกหมายเลข</p>
+                <p class="text-sm font-medium text-gray-500">จำนวนที่ยืนยันแล้วแต่ยังไม่มีหมายเลขสอบ</p>
                 <p class="mt-2 text-3xl font-bold text-amber-600">{{ $this->summary['pending'] }}</p>
             </div>
         </div>
