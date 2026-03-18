@@ -61,6 +61,31 @@
                                placeholder="เช่น 11045">
                     </div>
                 </div>
+
+                <div class="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div class="flex flex-col gap-2">
+                        <p class="text-xs text-gray-500">
+                            ปุ่มยืนยันทั้งหมด/ลบทั้งหมดจะทำงานตามรายการที่กรองอยู่ในขณะนี้
+                        </p>
+                        <label class="inline-flex items-center gap-2 text-xs text-gray-700">
+                            <input type="checkbox" wire:model.live="bulkConfirmPendingOnly"
+                                   class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                            ยืนยันเฉพาะรายการที่ยังไม่ยืนยัน (แนะนำ)
+                        </label>
+                    </div>
+                    <div class="inline-flex items-center gap-2 self-start md:self-auto">
+                        <button type="button" wire:click="promptBulkAction('confirm')"
+                                class="px-3 py-2 rounded-md bg-yellow-400 text-black hover:bg-yellow-500 text-xs font-semibold"
+                                wire:loading.attr="disabled">
+                            ยืนยันทั้งหมด
+                        </button>
+                        <button type="button" wire:click="promptBulkAction('delete')"
+                                class="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 text-xs font-semibold"
+                                wire:loading.attr="disabled">
+                            ลบทั้งหมด
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -125,7 +150,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500">
+                                <td colspan="7" class="px-6 py-10 text-center text-sm text-gray-500">
                                     ไม่พบข้อมูลผู้เข้าสอบ
                                 </td>
                             </tr>
@@ -160,6 +185,55 @@
                         <button type="button" wire:click="delete"
                                 class="px-4 py-2 rounded-md bg-red-600 text-xs font-semibold text-white hover:bg-red-700">
                             ยืนยันลบ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if ($bulkActionToConfirm)
+            <div class="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/40">
+                <div class="w-full max-w-md rounded-xl bg-white shadow-xl border border-gray-200">
+                    <div class="p-5 border-b border-gray-100">
+                        <h3 class="text-base font-semibold text-gray-900">
+                            {{ $bulkActionToConfirm === 'confirm' ? 'ยืนยันทั้งหมด' : 'ลบทั้งหมด' }}
+                        </h3>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-sm text-gray-700">
+                            คุณต้องการ
+                            <span class="font-semibold text-gray-900">{{ $bulkActionToConfirm === 'confirm' ? 'ยืนยันการสมัคร' : 'ลบผู้เข้าสอบ' }}</span>
+                            จากรายการที่กรองอยู่ทั้งหมด
+                            <span class="font-semibold text-gray-900">{{ number_format($confirmBulkCount) }}</span>
+                            รายการ ใช่หรือไม่?
+                        </p>
+                        @if ($bulkActionToConfirm === 'confirm')
+                            <p class="mt-2 text-xs text-gray-500">
+                                โหมดปัจจุบัน:
+                                {{ $bulkConfirmPendingOnly ? 'ยืนยันเฉพาะรายการที่ยังไม่ยืนยัน' : 'ยืนยันทุกรายการตามผลกรอง' }}
+                            </p>
+                        @endif
+                        @if ($bulkActionToConfirm === 'delete')
+                            <p class="mt-2 text-xs text-red-600">การลบทั้งหมดไม่สามารถย้อนกลับได้</p>
+                            <div class="mt-3">
+                                <label class="block text-xs text-gray-600 mb-1">พิมพ์คำว่า DELETE เพื่อยืนยัน</label>
+                                <input type="text" wire:model.live="bulkDeleteConfirmText"
+                                       class="w-full rounded-md border-gray-300 focus:border-red-500 focus:ring-red-500 text-sm"
+                                       placeholder="DELETE">
+                            </div>
+                        @endif
+                    </div>
+                    <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2">
+                        <button type="button" wire:click="cancelBulkAction"
+                                class="px-4 py-2 rounded-md border border-gray-300 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                            ยกเลิก
+                        </button>
+                        <button type="button" wire:click="executeBulkAction"
+                                @if ($bulkActionToConfirm === 'delete' && $bulkDeleteConfirmText !== 'DELETE')
+                                    disabled
+                                @endif
+                                class="px-4 py-2 rounded-md text-xs font-semibold {{ $bulkActionToConfirm === 'confirm' ? 'bg-yellow-500 hover:bg-yellow-600 text-black' : (($bulkDeleteConfirmText === 'DELETE') ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-300 text-red-100 cursor-not-allowed') }}">
+                            {{ $bulkActionToConfirm === 'confirm' ? 'ยืนยันทั้งหมด' : 'ยืนยันลบทั้งหมด' }}
                         </button>
                     </div>
                 </div>

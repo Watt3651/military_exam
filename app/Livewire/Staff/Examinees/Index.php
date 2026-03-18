@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Examinee;
 use App\Models\ExamRegistration;
 use App\Models\TestLocation;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -27,9 +28,13 @@ class Index extends Component
     public string $examLevelFilter = '';
     public string $examNumberFilter = '';
     public int $perPage = 10;
+    public bool $bulkConfirmPendingOnly = true;
 
     public ?int $confirmDeleteId = null;
     public ?string $confirmDeleteName = null;
+    public ?string $bulkActionToConfirm = null;
+    public int $confirmBulkCount = 0;
+    public string $bulkDeleteConfirmText = '';
 
     public function mount(): void
     {
@@ -80,7 +85,7 @@ class Index extends Component
     #[Computed]
     public function examinees(): LengthAwarePaginator
     {
-        $query = Examinee::query()
+        return $this->filteredExamineesQuery()
             ->with([
                 'user',
                 'branch',
@@ -88,7 +93,12 @@ class Index extends Component
                     $q->with('testLocation')->orderByDesc('registered_at');
                 },
             ])
-            ->orderByDesc('id');
+            ->paginate($this->perPage);
+    }
+
+    private function filteredExamineesQuery(): Builder
+    {
+        $query = Examinee::query()->orderByDesc('id');
 
         if ($this->searchName !== '') {
             $keyword = trim($this->searchName);
@@ -122,7 +132,7 @@ class Index extends Component
             });
         }
 
-        return $query->paginate($this->perPage);
+        return $query;
     }
 
     public function confirmDelete(int $id): void
@@ -136,6 +146,50 @@ class Index extends Component
     {
         $this->confirmDeleteId = null;
         $this->confirmDeleteName = null;
+    }
+
+    public function promptBulkAction(string $action): void
+    {
+        if (! in_array($action, ['confirm', 'delete'], true)) {
+            return;
+        }
+
+        $this->bulkActionToConfirm = $action;
+        $this->bulkDeleteConfirmText = '';
+        $this->confirmBulkCount = $action === 'confirm'
+            ? $this->countTargetRegistrationsForBulkConfirm()
+            : (int) $this->filteredExamineesQuery()->count();
+
+        if ($this->confirmBulkCount === 0) {
+            $this->cancelBulkAction();
+            session()->flash('error', $action === 'confirm'
+                ? 'ไม่พบรายการที่สามารถยืนยันได้จากเงื่อนไขที่เลือก'
+                : 'ไม่พบผู้เข้าสอบสำหรับลบจากเงื่อนไขที่เลือก');
+        }
+    }
+
+    public function cancelBulkAction(): void
+    {
+        $this->bulkActionToConfirm = null;
+        $this->confirmBulkCount = 0;
+        $this->bulkDeleteConfirmText = '';
+    }
+
+    public function executeBulkAction(): void
+    {
+        if ($this->bulkActionToConfirm === 'confirm') {
+            $this->confirmAllRegistrations();
+            return;
+        }
+
+        if ($this->bulkActionToConfirm === 'delete') {
+            if ($this->bulkDeleteConfirmText !== 'DELETE') {
+                session()->flash('error', 'กรุณาพิมพ์คำว่า DELETE เพื่อยืนยันการลบทั้งหมด');
+                return;
+            }
+
+            $this->deleteAllExaminees();
+        }
     }
 
     public function delete(): void
@@ -158,6 +212,86 @@ class Index extends Component
         $registration->update(['status' => ExamRegistration::STATUS_CONFIRMED]);
 
         session()->flash('success', 'ยืนยันการสมัครเรียบร้อย');
+    }
+
+    private function countTargetRegistrationsForBulkConfirm(): int
+    {
+        $count = 0;
+
+        $examinees = $this->filteredExamineesQuery()
+            ->with(['examRegistrations' => fn ($q) => $q->orderByDesc('registered_at')->orderByDesc('id')])
+            ->get();
+
+        foreach ($examinees as $examinee) {
+            $latestRegistration = $examinee->examRegistrations->first();
+            if (! $latestRegistration) {
+                continue;
+            }
+
+            if ($this->bulkConfirmPendingOnly && $latestRegistration->status === ExamRegistration::STATUS_CONFIRMED) {
+                continue;
+            }
+
+            $count++;
+        }
+
+        return $count;
+    }
+
+    private function confirmAllRegistrations(): void
+    {
+        $processedCount = 0;
+        $newlyConfirmedCount = 0;
+
+        $examinees = $this->filteredExamineesQuery()
+            ->with(['examRegistrations' => fn ($q) => $q->orderByDesc('registered_at')->orderByDesc('id')])
+            ->get();
+
+        foreach ($examinees as $examinee) {
+            $latestRegistration = $examinee->examRegistrations->first();
+            if (! $latestRegistration) {
+                continue;
+            }
+
+            if ($this->bulkConfirmPendingOnly && $latestRegistration->status === ExamRegistration::STATUS_CONFIRMED) {
+                continue;
+            }
+
+            $processedCount++;
+
+            if ($latestRegistration->status !== ExamRegistration::STATUS_CONFIRMED) {
+                $latestRegistration->update(['status' => ExamRegistration::STATUS_CONFIRMED]);
+                $newlyConfirmedCount++;
+            }
+        }
+
+        if ($processedCount === 0) {
+            session()->flash('error', 'ไม่พบรายการที่สามารถยืนยันได้จากเงื่อนไขที่เลือก');
+        } elseif ($this->bulkConfirmPendingOnly) {
+            session()->flash('success', "ยืนยันการสมัครเรียบร้อย {$newlyConfirmedCount} รายการ");
+        } else {
+            session()->flash('success', "ดำเนินการยืนยันทั้งหมด {$processedCount} รายการ (ยืนยันใหม่ {$newlyConfirmedCount} รายการ)");
+        }
+
+        $this->cancelBulkAction();
+        $this->resetPage();
+    }
+
+    private function deleteAllExaminees(): void
+    {
+        $ids = $this->filteredExamineesQuery()->pluck('id');
+
+        if ($ids->isEmpty()) {
+            session()->flash('error', 'ไม่พบผู้เข้าสอบสำหรับลบจากเงื่อนไขที่เลือก');
+            $this->cancelBulkAction();
+            return;
+        }
+
+        $deletedCount = Examinee::query()->whereIn('id', $ids)->forceDelete();
+        session()->flash('success', "ลบข้อมูลผู้เข้าสอบเรียบร้อย {$deletedCount} รายการ");
+
+        $this->cancelBulkAction();
+        $this->resetPage();
     }
 
     public function render()
