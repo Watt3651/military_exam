@@ -36,11 +36,12 @@ Route::get('dashboard', function () {
     // Redirect to role-specific dashboard
     return match ($user->role) {
         'staff'     => redirect()->route('staff.dashboard'),
+        'password_support' => redirect()->route('staff.password-support.index'),
         'commander' => redirect()->route('commander.dashboard'),
         'examinee'  => redirect()->route('examinee.dashboard'),
         default     => redirect('/'),
     };
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'ensure.password.changed'])->name('dashboard');
 
 // ─────────────────────────────────────────────────────────
 // Authenticated: Profile (ทุก role เข้าถึงได้)

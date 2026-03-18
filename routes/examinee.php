@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth', 'role:examinee'])
+Route::middleware(['auth', 'role:examinee', 'ensure.password.changed'])
     ->prefix('examinee')
     ->name('examinee.')
     ->group(function () {

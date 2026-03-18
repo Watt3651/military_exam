@@ -1,6 +1,6 @@
 {{--
 Staff Create User Form
-Section 2.1.3: Register สำหรับ Staff/Commander (Admin Only)
+Section 2.1.3: Register สำหรับ Staff/Commander/Password Support (Admin Only)
 
 Only Staff can access this page
 URL: /staff/users/create
@@ -84,17 +84,7 @@ URL: /staff/users/create
                                 <div>
                                     <dt class="font-medium text-gray-500">บทบาท</dt>
                                     <dd class="mt-1">
-                                        @if ($created_user_data['role'] === 'staff')
-                                            <span
-                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                เจ้าหน้าที่
-                                            </span>
-                                        @else
-                                            <span
-                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                                ผู้บังคับบัญชา
-                                            </span>
-                                        @endif
+                                        <x-role-badge :role="$created_user_data['role'] ?? null" />
                                     </dd>
                                 </div>
                             </dl>
@@ -133,7 +123,7 @@ URL: /staff/users/create
                         </div>
                         <div class="ml-4">
                             <h2 class="text-2xl font-bold text-gray-900">
-                                สร้างผู้ใช้งาน Staff/Commander
+                                สร้างผู้ใช้งานเจ้าหน้าที่
                             </h2>
                             <p class="mt-1 text-sm text-gray-600">
                                 เฉพาะเจ้าหน้าที่ (Staff) เท่านั้นที่สามารถสร้างบัญชีผู้ใช้งานได้
@@ -181,6 +171,7 @@ URL: /staff/users/create
                                     required>
                                     <option value="staff">เจ้าหน้าที่ (Staff)</option>
                                     <option value="commander">ผู้บังคับบัญชา (Commander)</option>
+                                    <option value="password_support">เจ้าหน้าที่ช่วยรีเซ็ตรหัสผ่าน</option>
                                 </select>
                                 <x-input-error :messages="$errors->get('role')" class="mt-2" />
                             </div>

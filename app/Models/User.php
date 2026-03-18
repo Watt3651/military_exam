@@ -26,8 +26,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $last_name นามสกุล
  * @property string|null $email อีเมล (Staff/Commander)
  * @property string $password bcrypt hash
- * @property string $role examinee|staff|commander
+ * @property string $role examinee|staff|commander|password_support
  * @property bool $is_active สถานะใช้งาน
+ * @property bool $must_change_password บังคับเปลี่ยนรหัสผ่านหลัง login
  * @property int|null $created_by ผู้สร้างบัญชี (FK users.id)
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -63,6 +64,7 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
+        'must_change_password',
         'created_by',
     ];
 
@@ -87,6 +89,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
         ];
     }
 
@@ -120,6 +123,7 @@ class User extends Authenticatable
                 'email',
                 'role',
                 'is_active',
+                'must_change_password',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
@@ -217,6 +221,42 @@ class User extends Authenticatable
         return $this->role === $role;
     }
 
+    /** แปลง role เป็นชื่อภาษาไทย */
+    public static function roleLabel(?string $role): string
+    {
+        return match ($role) {
+            'staff' => 'เจ้าหน้าที่',
+            'commander' => 'ผู้บังคับบัญชา',
+            'password_support' => 'เจ้าหน้าที่ช่วยรีเซ็ตรหัสผ่าน',
+            'examinee' => 'ผู้สมัครสอบ',
+            default => 'ไม่ระบุ',
+        };
+    }
+
+    /** แปลง role เป็นชุดสี badge */
+    public static function roleBadgeClasses(?string $role): string
+    {
+        return match ($role) {
+            'staff' => 'bg-blue-100 text-blue-800',
+            'commander' => 'bg-purple-100 text-purple-800',
+            'password_support' => 'bg-amber-100 text-amber-800',
+            'examinee' => 'bg-green-100 text-green-800',
+            default => 'bg-gray-100 text-gray-800',
+        };
+    }
+
+    /** ชื่อบทบาทภาษาไทยของผู้ใช้ปัจจุบัน */
+    public function getRoleLabelAttribute(): string
+    {
+        return self::roleLabel($this->role);
+    }
+
+    /** ชุดสี badge ของบทบาทปัจจุบัน */
+    public function getRoleBadgeClassesAttribute(): string
+    {
+        return self::roleBadgeClasses($this->role);
+    }
+
     /** ตรวจสอบว่าเป็นผู้เข้าสอบ */
     public function isExaminee(): bool
     {
@@ -227,6 +267,18 @@ class User extends Authenticatable
     public function isStaff(): bool
     {
         return $this->isRole('staff');
+    }
+
+    /** ตรวจสอบว่าเป็นเจ้าหน้าที่ช่วยรีเซ็ตรหัสผ่าน */
+    public function isPasswordSupport(): bool
+    {
+        return $this->isRole('password_support');
+    }
+
+    /** ตรวจสอบว่าสามารถเข้าหน้าช่วยรีเซ็ตรหัสผ่านได้ */
+    public function canSupportPasswords(): bool
+    {
+        return $this->isStaff() || $this->isPasswordSupport();
     }
 
     /** ตรวจสอบว่าเป็นผู้บังคับบัญชา */

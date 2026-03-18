@@ -184,5 +184,65 @@
                 </table>
             </div>
         </div>
+
+        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">รีเซ็ตรหัสผ่านผู้สมัครสอบ</h3>
+                <p class="mt-1 text-sm text-gray-500">เจ้าหน้าที่สามารถตั้งรหัสผ่านใหม่ให้ผู้สมัครสอบรายนี้ได้โดยตรง</p>
+            </div>
+
+            <form wire:submit="resetPassword" class="p-6 space-y-6">
+                @if ($generated_password)
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                        <p class="text-sm font-medium text-amber-800">รหัสผ่านใหม่</p>
+                        <div class="mt-2 flex items-center gap-3">
+                            <p class="text-lg font-mono font-semibold text-amber-900">{{ $generated_password }}</p>
+                            <button type="button"
+                                onclick="navigator.clipboard.writeText('{{ $generated_password }}')"
+                                class="text-sm text-amber-700 underline hover:text-amber-900">
+                                คัดลอก
+                            </button>
+                        </div>
+                        <p class="mt-2 text-xs text-amber-700">รหัสผ่านนี้จะแสดงหลังรีเซ็ตเท่านั้น กรุณาบันทึกหรือแจ้งผู้สมัครสอบทันที</p>
+                    </div>
+                @endif
+
+                <div>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" wire:model.live="auto_generate_password"
+                            class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500">
+                        <span class="ml-2 text-sm text-gray-700">สร้างรหัสผ่านอัตโนมัติ</span>
+                    </label>
+                </div>
+
+                @if (! $auto_generate_password)
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <x-input-label for="reset_password" value="รหัสผ่านใหม่" />
+                            <x-text-input id="reset_password" wire:model="reset_password" type="password" class="block mt-1 w-full" autocomplete="new-password" />
+                            <x-input-error :messages="$errors->get('reset_password')" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="reset_password_confirmation" value="ยืนยันรหัสผ่านใหม่" />
+                            <x-text-input id="reset_password_confirmation" wire:model="reset_password_confirmation" type="password" class="block mt-1 w-full" autocomplete="new-password" />
+                            <x-input-error :messages="$errors->get('reset_password_confirmation')" class="mt-2" />
+                        </div>
+                    </div>
+                @else
+                    <div class="rounded-lg bg-gray-50 border border-gray-200 p-4 text-sm text-gray-600">
+                        ระบบจะสร้างรหัสผ่านแบบสุ่มให้อัตโนมัติเมื่อกดปุ่มรีเซ็ตรหัสผ่าน
+                    </div>
+                @endif
+
+                <div class="flex items-center justify-end border-t border-gray-200 pt-6">
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50"
+                            wire:loading.attr="disabled" wire:target="resetPassword">
+                        <span wire:loading.remove wire:target="resetPassword">รีเซ็ตรหัสผ่าน</span>
+                        <span wire:loading wire:target="resetPassword">กำลังรีเซ็ต...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>

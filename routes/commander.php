@@ -21,7 +21,7 @@ use App\Livewire\Commander\Dashboard as CommanderDashboard;
 |
 */
 
-Route::middleware(['auth', 'role:commander'])
+Route::middleware(['auth', 'role:commander', 'ensure.password.changed'])
     ->prefix('commander')
     ->name('commander.')
     ->group(function () {

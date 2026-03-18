@@ -1,6 +1,6 @@
 {{--
 Staff Edit User Form
-Section 2.1.3: Edit สำหรับ Staff/Commander (Admin Only)
+Section 2.1.3: Edit สำหรับ Staff/Commander/Password Support (Admin Only)
 
 Only Staff can access this page
 URL: /staff/users/{id}/edit
@@ -8,6 +8,12 @@ URL: /staff/users/{id}/edit
 
 <div class="py-12">
     <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+
+        @if (session('success'))
+            <div class="mb-6 rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-700">
+                {{ session('success') }}
+            </div>
+        @endif
 
         {{-- Edit User Form --}}
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -23,7 +29,7 @@ URL: /staff/users/{id}/edit
                     </div>
                     <div class="ml-4">
                         <h2 class="text-2xl font-bold text-gray-900">
-                            แก้ไขผู้ใช้งาน Staff/Commander
+                            แก้ไขผู้ใช้งานเจ้าหน้าที่
                         </h2>
                         <p class="mt-1 text-sm text-gray-600">
                             เฉพาะเจ้าหน้าที่ (Staff) เท่านั้นที่สามารถแก้ไขบัญชีผู้ใช้งานได้
@@ -71,6 +77,7 @@ URL: /staff/users/{id}/edit
                                     required>
                                     <option value="staff">เจ้าหน้าที่ (Staff)</option>
                                     <option value="commander">ผู้บังคับบัญชา (Commander)</option>
+                                    <option value="password_support">เจ้าหน้าที่ช่วยรีเซ็ตรหัสผ่าน</option>
                                 </select>
                                 <x-input-error :messages="$errors->get('role')" class="mt-2" />
                             </div>
@@ -117,7 +124,7 @@ URL: /staff/users/{id}/edit
                             <div class="ml-3">
                                 <p class="text-sm text-blue-700">
                                     <strong>หมายเหตุ:</strong> การแก้ไขข้อมูลผู้ใช้งานจะไม่เปลี่ยนแปลงรหัสผ่าน
-                                    หากต้องการเปลี่ยนรหัสผ่าน กรุณาแจ้งให้ผู้ใช้ดำเนินการด้วยตนเอง
+                                    หากต้องการเปลี่ยนรหัสผ่าน ให้ใช้ส่วนรีเซ็ตรหัสผ่านด้านล่าง
                                 </p>
                             </div>
                         </div>
@@ -155,6 +162,70 @@ URL: /staff/users/{id}/edit
                     </div>
                 </form>
             </div>
+        </div>
+
+        <div class="mt-6 bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">รีเซ็ตรหัสผ่าน</h3>
+                <p class="mt-1 text-sm text-gray-500">เจ้าหน้าที่สามารถตั้งรหัสผ่านใหม่ให้บัญชีนี้ได้ และควรแจ้งรหัสผ่านใหม่ให้ผู้ใช้ทันที</p>
+            </div>
+
+            <form wire:submit="resetPassword" class="p-6 space-y-6">
+                @if ($generated_password)
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                        <p class="text-sm font-medium text-amber-800">รหัสผ่านใหม่</p>
+                        <div class="mt-2 flex items-center gap-3">
+                            <p class="text-lg font-mono font-semibold text-amber-900">{{ $generated_password }}</p>
+                            <button type="button"
+                                onclick="navigator.clipboard.writeText('{{ $generated_password }}')"
+                                class="text-sm text-amber-700 underline hover:text-amber-900">
+                                คัดลอก
+                            </button>
+                        </div>
+                        <p class="mt-2 text-xs text-amber-700">รหัสผ่านนี้จะแสดงในหน้านี้หลังรีเซ็ตเท่านั้น กรุณาบันทึกหรือแจ้งผู้ใช้ทันที</p>
+                    </div>
+                @endif
+
+                <div>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" wire:model.live="auto_generate_password"
+                            class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500">
+                        <span class="ml-2 text-sm text-gray-700">สร้างรหัสผ่านอัตโนมัติ</span>
+                    </label>
+                </div>
+
+                @if (! $auto_generate_password)
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <x-input-label for="reset_password" value="รหัสผ่านใหม่" class="required" />
+                            <x-text-input wire:model="reset_password" id="reset_password" class="block mt-1 w-full"
+                                type="password" autocomplete="new-password" placeholder="ตั้งรหัสผ่านใหม่" />
+                            <x-input-error :messages="$errors->get('reset_password')" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <x-input-label for="reset_password_confirmation" value="ยืนยันรหัสผ่านใหม่" class="required" />
+                            <x-text-input wire:model="reset_password_confirmation" id="reset_password_confirmation"
+                                class="block mt-1 w-full" type="password" autocomplete="new-password"
+                                placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" />
+                            <x-input-error :messages="$errors->get('reset_password_confirmation')" class="mt-2" />
+                        </div>
+                    </div>
+                @else
+                    <div class="rounded-lg bg-gray-50 border border-gray-200 p-4 text-sm text-gray-600">
+                        ระบบจะสร้างรหัสผ่านแบบสุ่มให้อัตโนมัติเมื่อกดปุ่มรีเซ็ต
+                    </div>
+                @endif
+
+                <div class="flex items-center justify-end pt-4 border-t border-gray-200">
+                    <button type="submit"
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50"
+                        wire:loading.attr="disabled" wire:target="resetPassword">
+                        <span wire:loading.remove wire:target="resetPassword">รีเซ็ตรหัสผ่าน</span>
+                        <span wire:loading wire:target="resetPassword">กำลังรีเซ็ต...</span>
+                    </button>
+                </div>
+            </form>
         </div>
     {{-- Inline style for required label --}}
     <style>
