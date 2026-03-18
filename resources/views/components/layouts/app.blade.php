@@ -41,8 +41,6 @@
                         ['route' => 'staff.test-locations.index', 'label' => 'สถานที่สอบ', 'icon' => 'location', 'pattern' => 'staff.test-locations.*'],
                         ['route' => 'staff.branches.index', 'label' => 'เหล่า', 'icon' => 'menu', 'pattern' => 'staff.branches.*'],
                         ['route' => 'staff.reports.index', 'label' => 'รายงาน', 'icon' => 'chart', 'pattern' => 'staff.reports.*'],
-                        ['route' => 'staff.password-support.index', 'label' => 'ช่วยรีเซ็ตรหัสผ่าน', 'icon' => 'key', 'pattern' => 'staff.password-support.*'],
-                        ['route' => 'staff.password-support.history', 'label' => 'ประวัติรีเซ็ตรหัสผ่าน', 'icon' => 'clock', 'pattern' => 'staff.password-support.*'],
                         ['route' => 'staff.users.index', 'label' => 'ผู้ใช้งาน', 'icon' => 'users', 'pattern' => 'staff.users.*'],
                     ],
                 ],
