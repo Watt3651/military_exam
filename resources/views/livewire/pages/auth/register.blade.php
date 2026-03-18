@@ -17,6 +17,15 @@ new #[Layout('layouts.guest')] class extends Component
     public string $password = '';
     public string $password_confirmation = '';
 
+    // Rank Options - same as Examinee/Profile
+    public array $rankOptions = [
+        'จ.ต.', 'จ.ท.', 'จ.อ.',
+        'พ.จ.ต.', 'พ.จ.ท.', 'พ.จ.อ.',
+        'ร.ต.', 'ร.ท.', 'ร.อ.',
+        'น.ต.', 'น.ท.', 'น.อ.',
+        'พล.ต.', 'พล.ท.', 'พล.อ.',
+    ];
+
     /**
      * Handle an incoming registration request.
      */
@@ -80,7 +89,7 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
         <!-- Rank -->
-        <div>
+        {{-- <div>
             <x-input-label for="rank" value="ยศ" />
             <x-text-input 
                 wire:model="rank" 
@@ -90,6 +99,22 @@ new #[Layout('layouts.guest')] class extends Component
                 name="rank" 
                 required
                 placeholder="เช่น พ.อ., ร.ต., ร.อ." />
+            <x-input-error :messages="$errors->get('rank')" class="mt-2" />
+        </div> --}}
+
+        <!-- Rnak Options -->
+        <div>
+            <x-input-label for="rank" class="block text-sm font-medium text-gray-700 mb-1">
+                ยศ <span class="text-red-500">*</span>
+            </x-input-label>
+            <select id="rank"
+              wire:model="rank"
+              class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2D6A4F] focus:ring-[#2D6A4F] text-sm">
+                <option value="">-- เลือกยศ --</option>
+                @foreach ($rankOptions as $r)
+                    <option value="{{ $r }}">{{ $r }}</option>
+                @endforeach
+            </select>
             <x-input-error :messages="$errors->get('rank')" class="mt-2" />
         </div>
 

@@ -55,11 +55,29 @@ Fields:
         </div>
 
         {{-- Rank --}}
-        <div>
+        {{-- <div>
             <x-input-label for="rank" value="ยศ" class="required" />
             <x-text-input wire:model="rank" id="rank" class="block mt-1 w-full" type="text" name="rank" required
                 placeholder="เช่น น.อ., ร.อ.,​ พ.จ.อ., จ.อ." />
             <x-input-error :messages="$errors->get('rank')" class="mt-2" />
+        </div>
+ --}}
+        {{-- Rank Options --}}
+        <div>
+            <x-input-label for="rank" class="block text-sm font-medium text-gray-700 mb-1">
+                ยศ <span class="text-red-500">*</span>
+            </x-input-label>
+            <select id="rank"
+              wire:model="rank"
+              class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2D6A4F] focus:ring-[#2D6A4F] text-sm">
+                <option value="">-- เลือกยศ --</option>
+                @foreach ($rankOptions as $r)
+                    <option value="{{ $r }}">{{ $r }}</option>
+                @endforeach
+            </select>
+            @error('rank')
+            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+            @enderror
         </div>
 
         {{-- First Name & Last Name in Grid --}}

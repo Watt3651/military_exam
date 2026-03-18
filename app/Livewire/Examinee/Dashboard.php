@@ -75,7 +75,7 @@ class Dashboard extends Component
 
             // ─── Latest Registration ───
             $this->latestRegistration = ExamRegistration::where('examinee_id', $this->examinee->id)
-                ->with(['examSession', 'testLocation'])
+                ->with(['examSession', 'testLocation', 'positionQuota'])
                 ->orderByDesc('registered_at')
                 ->first();
 
@@ -101,7 +101,21 @@ class Dashboard extends Component
         }
 
         // ─── Active Session (เปิดรับสมัครอยู่?) ───
-        $this->activeSession = ExamSession::registrationOpen()->first();
+        $userLevel = $this->latestRegistration?->exam_level
+            ?? $this->latestRegistration?->positionQuota?->exam_level
+            ?? $this->latestRegistration?->examSession?->exam_level;
+
+        if (! empty($userLevel)) {
+            $this->activeSession = ExamSession::registrationOpen()
+                ->where('exam_level', $userLevel)
+                ->first();
+        }
+
+        // Fallback: show any open session
+        if (! $this->activeSession) {
+            $this->activeSession = ExamSession::registrationOpen()->first();
+        }
+
         $this->isRegistrationOpen = $this->activeSession !== null;
     }
 

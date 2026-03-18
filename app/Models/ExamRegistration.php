@@ -31,6 +31,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property string|null $exam_number หมายเลขสอบ 5 หลัก
  * @property int $test_location_id FK test_locations
  * @property int|null $position_quota_id FK position_quotas
+ * @property string|null $exam_position ตำแหน่งที่สมัครสอบ
  * @property string $status pending|confirmed|cancelled
  * @property \Illuminate\Support\Carbon $registered_at วันเวลาที่สมัคร
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -51,9 +52,11 @@ class ExamRegistration extends Model
     protected $fillable = [
         'examinee_id',
         'exam_session_id',
+        'exam_level',
         'exam_number',
         'test_location_id',
         'position_quota_id',
+        'exam_position',
         'status',
         'registered_at',
     ];
@@ -168,6 +171,20 @@ class ExamRegistration extends Model
     public function getStatusLabelAttribute(): string
     {
         return self::STATUS_LABELS[$this->status] ?? $this->status;
+    }
+
+    /**
+     * ตำแหน่งที่สมัครสอบ (ดึงจาก position_quota ถ้ามี)
+     */
+    public function getExamPositionAttribute(): ?string
+    {
+        // ถ้ามีค่า exam_position ที่เก็บไว้แล้ว ให้ใช้ค่านั้น
+        if ($this->attributes['exam_position'] ?? null) {
+            return $this->attributes['exam_position'];
+        }
+        
+        // ถ้าไม่มี ให้ดึงจาก position_quota relationship
+        return $this->positionQuota?->position_name;
     }
 
     /*

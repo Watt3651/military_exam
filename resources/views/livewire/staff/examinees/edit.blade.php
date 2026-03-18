@@ -66,10 +66,29 @@
                         <x-input-error :messages="$errors->get('eligible_year')" class="mt-2" />
                     </div>
 
-                    <div>
-                        <x-input-label for="suspended_years" value="ปีที่ถูกงดบำเหน็จ" />
-                        <x-text-input id="suspended_years" wire:model="suspended_years" type="number" class="block mt-1 w-full" />
+                    <div class="md:col-span-3">
+                        <x-input-label value="ปีที่ถูกงดบำเหน็จ" />
+                        @if(count($availableSuspendedYears) > 0)
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mt-2">
+                                @foreach($availableSuspendedYears as $yearInfo)
+                                    <label class="flex items-center p-2 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors {{ in_array($yearInfo['year'], $suspended_years) ? 'bg-red-50 border-red-300' : 'border-gray-200' }}">
+                                        <input type="checkbox" 
+                                               wire:model="suspended_years" 
+                                               value="{{ $yearInfo['year'] }}"
+                                               class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                                        <span class="ml-2 text-sm">
+                                            {{ $yearInfo['year'] }}
+                                            <span class="text-xs text-gray-500 block">(หัก {{ $yearInfo['points'] }} คะแนน)</span>
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <p class="mt-2 text-xs text-gray-500">เลือกปีที่ถูกงดบำเหน็จ ระบบจะหักคะแนนตามเกณฑ์ขั้นบันได</p>
+                        @else
+                            <p class="mt-2 text-sm text-gray-400">กรุณาระบุปีที่มีสิทธิ์สอบก่อน</p>
+                        @endif
                         <x-input-error :messages="$errors->get('suspended_years')" class="mt-2" />
+                        <x-input-error :messages="$errors->get('suspended_years.*')" class="mt-2" />
                     </div>
                     <div>
                         <x-input-label for="border_area_id" value="พื้นที่ชายแดน" />
@@ -121,7 +140,7 @@
                         กลับหน้ารายการ
                     </a>
                     <button type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md text-xs font-semibold text-white uppercase tracking-widest hover:bg-primary-700 disabled:opacity-50"
+                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-green-100"
                             wire:loading.attr="disabled">
                         บันทึกการแก้ไข
                     </button>

@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('exam_number', 5)->nullable()->comment('หมายเลขสอบ 5 หลัก: XYZNN');
             $table->unsignedBigInteger('test_location_id')->comment('FK test_locations — สถานที่สอบ');
             $table->unsignedBigInteger('position_quota_id')->nullable()->comment('FK position_quotas — อัตราตำแหน่ง');
+            $table->string('exam_position')->nullable()->comment('ตำแหน่งที่สมัครสอบ');
             $table->enum('status', ['pending', 'confirmed', 'cancelled'])->default('pending')->comment('สถานะการสมัคร');
             $table->timestamp('registered_at')->useCurrent()->comment('วันเวลาที่สมัคร');
             $table->timestamps();

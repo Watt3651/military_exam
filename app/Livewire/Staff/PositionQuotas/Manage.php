@@ -22,7 +22,6 @@ class Manage extends Component
 
     public ?int $exam_session_id = null;
     public string $position_name = '';
-    public ?int $quota_count = null;
 
     public ?int $editingId = null;
     public string $search = '';
@@ -63,7 +62,7 @@ class Manage extends Component
     protected function rules(): array
     {
         return [
-            'exam_session_id' => ['required', 'integer', 'exists:exam_sessions,id'],
+            'exam_session_id' => ['required', 'exists:exam_sessions,id'],
             'position_name' => [
                 'required',
                 'string',
@@ -72,7 +71,6 @@ class Manage extends Component
                     ->where(fn ($query) => $query->where('exam_session_id', $this->exam_session_id))
                     ->ignore($this->editingId),
             ],
-            'quota_count' => ['required', 'integer', 'min:0'],
         ];
     }
 
@@ -86,9 +84,6 @@ class Manage extends Component
             'exam_session_id.exists' => 'ไม่พบรอบสอบที่เลือก',
             'position_name.required' => 'กรุณากรอกตำแหน่ง',
             'position_name.unique' => 'ตำแหน่งนี้มีในรอบสอบที่เลือกแล้ว',
-            'quota_count.required' => 'กรุณากรอกจำนวนอัตรา',
-            'quota_count.integer' => 'จำนวนอัตราต้องเป็นตัวเลขจำนวนเต็ม',
-            'quota_count.min' => 'จำนวนอัตราต้องมากกว่าหรือเท่ากับ 0',
         ];
     }
 
@@ -142,7 +137,6 @@ class Manage extends Component
         $this->editingId = $quota->id;
         $this->exam_session_id = $quota->exam_session_id;
         $this->position_name = $quota->position_name;
-        $this->quota_count = $quota->quota_count;
     }
 
     public function cancelEdit(): void
@@ -171,7 +165,7 @@ class Manage extends Component
     private function resetForm(): void
     {
         $currentSessionId = $this->exam_session_id;
-        $this->reset(['editingId', 'position_name', 'quota_count']);
+        $this->reset(['editingId', 'position_name']);
         $this->exam_session_id = $currentSessionId;
         $this->resetValidation();
     }

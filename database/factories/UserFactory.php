@@ -28,7 +28,7 @@ class UserFactory extends Factory
     {
         return [
             'national_id' => fake()->unique()->numerify('#############'), // 13 digits
-            'rank' => fake()->randomElement(['พลฯ', 'ส.ท.', 'ส.อ.', 'จ.ส.ต.', 'จ.ส.ท.', 'จ.ส.อ.']),
+            'rank' => fake()->randomElement(['จ.ต.', 'จ.ท.', 'จ.อ.', 'พ.จ.ต.', 'พ.จ.ท.', 'พ.จ.อ.']),
             'first_name' => fake()->firstName(),
             'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),

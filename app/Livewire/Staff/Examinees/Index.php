@@ -4,6 +4,7 @@ namespace App\Livewire\Staff\Examinees;
 
 use App\Models\Branch;
 use App\Models\Examinee;
+use App\Models\ExamRegistration;
 use App\Models\TestLocation;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -132,11 +133,19 @@ class Index extends Component
         }
 
         $examinee = Examinee::findOrFail($this->confirmDeleteId);
-        $examinee->delete();
+        $examinee->forceDelete();
 
         session()->flash('success', 'ลบข้อมูลผู้เข้าสอบเรียบร้อย');
         $this->cancelDelete();
         $this->resetPage();
+    }
+
+    public function confirmRegistration(int $registrationId): void
+    {
+        $registration = ExamRegistration::findOrFail($registrationId);
+        $registration->update(['status' => ExamRegistration::STATUS_CONFIRMED]);
+
+        session()->flash('success', 'ยืนยันการสมัครเรียบร้อย');
     }
 
     public function render()

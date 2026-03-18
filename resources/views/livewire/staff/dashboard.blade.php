@@ -21,7 +21,7 @@
 
         <div class="bg-white shadow-sm sm:rounded-lg border border-gray-100 p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label for="yearFilter" class="block text-sm font-medium text-gray-700">ปีการสอบ</label>
                     <select id="yearFilter" wire:model.live="yearFilter"
@@ -30,6 +30,15 @@
                         @foreach ($this->years as $year)
                             <option value="{{ $year }}">{{ $year }}</option>
                         @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="examLevelFilter" class="block text-sm font-medium text-gray-700">ระดับการสอบ</label>
+                    <select id="examLevelFilter" wire:model.live="examLevelFilter"
+                            class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                        <option value="">ทั้งหมด</option>
+                        <option value="{{ \App\Models\ExamSession::LEVEL_SERGEANT_MAJOR }}">{{ \App\Models\ExamSession::LEVEL_LABELS[\App\Models\ExamSession::LEVEL_SERGEANT_MAJOR] }}</option>
+                        <option value="{{ \App\Models\ExamSession::LEVEL_MASTER_SERGEANT }}">{{ \App\Models\ExamSession::LEVEL_LABELS[\App\Models\ExamSession::LEVEL_MASTER_SERGEANT] }}</option>
                     </select>
                 </div>
                 <div>

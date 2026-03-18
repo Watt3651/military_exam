@@ -21,6 +21,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  *
  * @property int $id
  * @property int $exam_session_id FK exam_sessions
+ * @property string $exam_level ระดับที่สอบ (sergeant_major, master_sergeant)
  * @property string $position_name ชื่อตำแหน่ง
  * @property int $quota_count จำนวนอัตราที่เปิด
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -40,6 +41,7 @@ class PositionQuota extends Model
      */
     protected $fillable = [
         'exam_session_id',
+        'exam_level',
         'position_name',
         'quota_count',
     ];
@@ -52,6 +54,25 @@ class PositionQuota extends Model
         return [
             'quota_count' => 'integer',
         ];
+    }
+
+    /**
+     * จำนวนอัตราที่เหลือ (null = ไม่จำกัด)
+     */
+    public function getRemainingCountAttribute(): ?int
+    {
+        if ($this->quota_count === null) {
+            return null; // ไม่จำกัดจำนวน
+        }
+        return max(0, $this->quota_count - $this->registered_count);
+    }
+
+    /**
+     * ตรวจสอบว่ายังมีอัตราเหลือหรือไม่ (null = ไม่จำกัด)
+     */
+    public function hasAvailableQuota(): bool
+    {
+        return $this->remaining_count === null || $this->remaining_count > 0;
     }
 
     /*
@@ -111,14 +132,6 @@ class PositionQuota extends Model
             ->count();
     }
 
-    /**
-     * จำนวนอัตราที่เหลือ
-     */
-    public function getRemainingCountAttribute(): int
-    {
-        return max(0, $this->quota_count - $this->registered_count);
-    }
-
     /*
     |--------------------------------------------------------------------------
     | Scopes
@@ -131,19 +144,5 @@ class PositionQuota extends Model
     public function scopeBySession(Builder $query, int $examSessionId): Builder
     {
         return $query->where('exam_session_id', $examSessionId);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Helper Methods
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * ตรวจสอบว่ายังมีอัตราเหลือหรือไม่
-     */
-    public function hasAvailableQuota(): bool
-    {
-        return $this->remaining_count > 0;
     }
 }

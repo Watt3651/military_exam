@@ -28,6 +28,9 @@ class Edit extends Component
     public Collection $testLocations;
     public Collection $editLogs;
 
+    // ─── Suspended Years Options ───
+    public array $availableSuspendedYears = [];
+
     public string $national_id = '';
     public string $rank = '';
     public string $first_name = '';
@@ -37,7 +40,7 @@ class Edit extends Component
     public string $branch_id = '';
     public string $age = '';
     public string $eligible_year = '';
-    public string $suspended_years = '0';
+    public array $suspended_years = []; // เปลี่ยนเป็น array เก็บปี พ.ศ.
     public string $border_area_id = '';
     public string $test_location_id = '';
     public string $exam_number = '';
@@ -71,7 +74,9 @@ class Edit extends Component
         $this->branch_id = (string) $this->examinee->branch_id;
         $this->age = (string) $this->examinee->age;
         $this->eligible_year = (string) $this->examinee->eligible_year;
-        $this->suspended_years = (string) $this->examinee->suspended_years;
+        // แปลง suspended_years เป็น array
+        $suspendedYears = $this->examinee->suspended_years ?? [];
+        $this->suspended_years = is_array($suspendedYears) ? $suspendedYears : [];
         $this->border_area_id = (string) ($this->examinee->border_area_id ?? '');
 
         if ($this->latestRegistration) {
@@ -81,6 +86,47 @@ class Edit extends Component
         }
 
         $this->loadEditLogs();
+
+        // Generate available suspended years options
+        $this->generateAvailableSuspendedYears();
+    }
+
+    /**
+     * สร้างรายการปีที่สามารถเลือกเป็นปีงดบำเหน็จได้
+     */
+    public function generateAvailableSuspendedYears(): void
+    {
+        $currentYear = (int) date('Y') + 543;
+        $eligibleYear = (int) $this->eligible_year;
+
+        $this->availableSuspendedYears = [];
+        if ($eligibleYear > 0 && $eligibleYear <= $currentYear) {
+            for ($year = $eligibleYear; $year <= $currentYear; $year++) {
+                $yearIndex = $year - $eligibleYear + 1;
+                $points = $this->getTierPoints($yearIndex);
+                $this->availableSuspendedYears[] = [
+                    'year' => $year,
+                    'index' => $yearIndex,
+                    'points' => $points,
+                ];
+            }
+        }
+    }
+
+    /**
+     * ดึงคะแนนตาม tier ของปี
+     */
+    private function getTierPoints(int $yearIndex): int
+    {
+        if ($yearIndex <= 5) {
+            return 2;
+        } elseif ($yearIndex <= 10) {
+            return 3;
+        } elseif ($yearIndex <= 15) {
+            return 4;
+        } else {
+            return 5;
+        }
     }
 
     /**
@@ -97,7 +143,8 @@ class Edit extends Component
             'branch_id' => ['required', 'exists:branches,id'],
             'age' => ['required', 'integer', 'min:18', 'max:60'],
             'eligible_year' => ['required', 'integer', 'min:2500', 'max:2600'],
-            'suspended_years' => ['required', 'integer', 'min:0', 'max:20'],
+            'suspended_years' => ['nullable', 'array'], // เปลี่ยนเป็น array
+            'suspended_years.*' => ['integer', 'min:2500', 'max:2600'],
             'border_area_id' => ['nullable', 'exists:border_areas,id'],
             'test_location_id' => ['nullable', 'exists:test_locations,id'],
             'exam_number' => ['nullable', 'string', 'max:5'],
@@ -144,7 +191,7 @@ class Edit extends Component
 
             $scores = $calculator->calculateAll(
                 (int) $validated['eligible_year'],
-                (int) $validated['suspended_years'],
+                $validated['suspended_years'] ?? [],
                 $validated['border_area_id'] ? (int) $validated['border_area_id'] : null
             );
 
@@ -152,7 +199,7 @@ class Edit extends Component
             $this->logIfChanged('branch_id', (string) $this->examinee->branch_id, (string) $validated['branch_id'], $staff->id, $validated['reason']);
             $this->logIfChanged('age', (string) $this->examinee->age, (string) $validated['age'], $staff->id, $validated['reason']);
             $this->logIfChanged('eligible_year', (string) $this->examinee->eligible_year, (string) $validated['eligible_year'], $staff->id, $validated['reason']);
-            $this->logIfChanged('suspended_years', (string) $this->examinee->suspended_years, (string) $validated['suspended_years'], $staff->id, $validated['reason']);
+            $this->logIfChanged('suspended_years', json_encode($this->examinee->suspended_years ?? []), json_encode($validated['suspended_years'] ?? []), $staff->id, $validated['reason']);
             $this->logIfChanged('border_area_id', (string) ($this->examinee->border_area_id ?? ''), (string) ($validated['border_area_id'] ?? ''), $staff->id, $validated['reason']);
             $this->logIfChanged('pending_score', (string) $this->examinee->pending_score, (string) $scores['pending_score'], $staff->id, $validated['reason']);
             $this->logIfChanged('special_score', (string) $this->examinee->special_score, (string) $scores['special_score'], $staff->id, $validated['reason']);
@@ -162,7 +209,7 @@ class Edit extends Component
                 'branch_id' => $validated['branch_id'],
                 'age' => $validated['age'],
                 'eligible_year' => $validated['eligible_year'],
-                'suspended_years' => $validated['suspended_years'],
+                'suspended_years' => $validated['suspended_years'] ?? [], // เก็บเป็น array
                 'border_area_id' => $validated['border_area_id'] ?: null,
                 'pending_score' => $scores['pending_score'],
                 'special_score' => $scores['special_score'],

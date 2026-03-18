@@ -3,14 +3,16 @@
 namespace App\Livewire\Staff\ExamSessions;
 
 use App\Models\ExamSession;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.staff')]
-#[Title('สร้างรอบสอบใหม่')]
+#[Title('จัดการรอบสอบ')]
 class Create extends Component
 {
     public string $year = '';
@@ -20,6 +22,9 @@ class Create extends Component
     public string $exam_date = '';
     public bool $is_active = true;
 
+    /** @var Collection<int, ExamSession> */
+    public Collection $sessions;
+
     public function mount(): void
     {
         /** @var \App\Models\User $user */
@@ -27,6 +32,16 @@ class Create extends Component
         if (! $user->isStaff()) {
             abort(403, 'เฉพาะเจ้าหน้าที่ (Staff) เท่านั้นที่สามารถเข้าถึงหน้านี้ได้');
         }
+
+        $this->loadSessions();
+    }
+
+    private function loadSessions(): void
+    {
+        $this->sessions = ExamSession::query()
+            ->orderByDesc('year')
+            ->orderBy('exam_level')
+            ->get();
     }
 
     /**
@@ -90,6 +105,8 @@ class Create extends Component
         $this->reset(['year', 'registration_start', 'registration_end', 'exam_date']);
         $this->exam_level = ExamSession::LEVEL_SERGEANT_MAJOR;
         $this->is_active = true;
+
+        $this->loadSessions();
     }
 
     public function render()
