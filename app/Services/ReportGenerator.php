@@ -32,7 +32,6 @@ class ReportGenerator
      *
      * Filters ที่รองรับ:
      * - branch_id (optional)
-     * - exam_level (optional: sergeant_major|master_sergeant)
      * - exam_session_id (optional)
      *
      * @param  int                  $testLocationId  สถานที่สอบ (required)
@@ -41,6 +40,8 @@ class ReportGenerator
      */
     public function generateExamineeListPDF(int $testLocationId, array $filters = []): DomPdfWrapper
     {
+        $selectedSession = null;
+
         $query = ExamRegistration::query()
             ->where('test_location_id', $testLocationId)
             ->where('status', '!=', ExamRegistration::STATUS_CANCELLED)
@@ -56,13 +57,24 @@ class ReportGenerator
             $query->whereHas('examinee', fn ($q) => $q->where('branch_id', (int) $filters['branch_id']));
         }
 
-        if (! empty($filters['exam_level'])) {
-            $examLevel = (string) $filters['exam_level'];
-            $query->whereHas('examSession', fn ($q) => $q->where('exam_level', $examLevel));
-        }
-
         if (! empty($filters['exam_session_id'])) {
-            $query->where('exam_session_id', (int) $filters['exam_session_id']);
+            $selectedSession = ExamSession::query()->findOrFail((int) $filters['exam_session_id']);
+            $sessionLevel = (string) $selectedSession->exam_level;
+            $sessionYear = (int) $selectedSession->year;
+
+            $query->whereHas('examSession', fn ($sessionQuery) => $sessionQuery->where('year', $sessionYear))
+                ->where(function ($subQuery) use ($sessionLevel): void {
+                    $subQuery->where('exam_level', $sessionLevel)
+                        ->orWhere(function ($quotaFallbackQuery) use ($sessionLevel): void {
+                            $quotaFallbackQuery->whereNull('exam_level')
+                                ->whereHas('positionQuota', fn ($quotaQuery) => $quotaQuery->where('exam_level', $sessionLevel));
+                        })
+                        ->orWhere(function ($sessionFallbackQuery) use ($sessionLevel): void {
+                            $sessionFallbackQuery->whereNull('exam_level')
+                                ->whereDoesntHave('positionQuota')
+                                ->whereHas('examSession', fn ($sessionQuery) => $sessionQuery->where('exam_level', $sessionLevel));
+                        });
+                });
         }
 
         /** @var EloquentCollection<int, ExamRegistration> $rows */
@@ -72,8 +84,8 @@ class ReportGenerator
 
         $firstRow = $rows->first();
         $locationName = $firstRow?->testLocation?->name ?? '-';
-        $sessionLabel = $firstRow?->examSession?->exam_level_label ?? '-';
-        $examDate = $firstRow?->examSession?->exam_date?->format('d/m/Y') ?? '-';
+        $sessionLabel = $selectedSession?->exam_level_label ?? $firstRow?->examSession?->exam_level_label ?? '-';
+        $examDate = $selectedSession?->exam_date?->format('d/m/Y') ?? $firstRow?->examSession?->exam_date?->format('d/m/Y') ?? '-';
         $printedAt = now()->format('d/m/Y H:i');
         $printedBy = Auth::user()?->full_name ?? 'System';
 
@@ -118,30 +130,58 @@ class ReportGenerator
      * 2) แยกตามสถานที่สอบ
      * 3) สรุปสถิติ
      *
-     * @param  int  $examSessionId
+     * @param  int                  $examSessionId
+     * @param  array<string,mixed>  $filters
      * @return BinaryFileResponse
      */
-    public function exportAllExaminees(int $examSessionId): BinaryFileResponse
+    public function exportAllExaminees(int $examSessionId, array $filters = []): BinaryFileResponse
     {
+        $session = ExamSession::query()->findOrFail($examSessionId);
+        $sessionLevel = (string) $session->exam_level;
+        $sessionYear = (int) $session->year;
+        $sessionLabel = (string) $session->exam_level_label;
+
         /** @var EloquentCollection<int, ExamRegistration> $registrations */
         $registrations = ExamRegistration::query()
-            ->where('exam_session_id', $examSessionId)
+            ->where('status', '!=', ExamRegistration::STATUS_CANCELLED)
+            ->whereHas('examSession', fn ($query) => $query->where('year', $sessionYear))
+            ->where(function ($subQuery) use ($sessionLevel): void {
+                $subQuery->where('exam_level', $sessionLevel)
+                    ->orWhere(function ($quotaFallbackQuery) use ($sessionLevel): void {
+                        $quotaFallbackQuery->whereNull('exam_level')
+                            ->whereHas('positionQuota', fn ($quotaQuery) => $quotaQuery->where('exam_level', $sessionLevel));
+                    })
+                    ->orWhere(function ($sessionFallbackQuery) use ($sessionLevel): void {
+                        $sessionFallbackQuery->whereNull('exam_level')
+                            ->whereDoesntHave('positionQuota')
+                            ->whereHas('examSession', fn ($sessionQuery) => $sessionQuery->where('exam_level', $sessionLevel));
+                    });
+            })
+            ->when(! empty($filters['test_location_id']), fn ($query) => $query->where('test_location_id', (int) $filters['test_location_id']))
+            ->when(! empty($filters['branch_id']), fn ($query) => $query->whereHas('examinee', fn ($subQuery) => $subQuery->where('branch_id', (int) $filters['branch_id'])))
             ->with([
                 'testLocation:id,name,code',
                 'examSession:id,year,exam_level',
                 'examinee:id,user_id,branch_id,pending_score,special_score',
                 'examinee.user:id,national_id,rank,first_name,last_name',
                 'examinee.branch:id,name,code',
+                'positionQuota:id,exam_level',
             ])
-            ->get();
+            ->get()
+            ->sortBy([
+                fn (ExamRegistration $registration) => (string) ($registration->testLocation?->code ?? '99'),
+                fn (ExamRegistration $registration) => (string) ($registration->exam_number ?? 'ZZZZZ'),
+                fn (ExamRegistration $registration) => trim(((string) ($registration->examinee?->user?->first_name ?? '')) . ' ' . ((string) ($registration->examinee?->user?->last_name ?? ''))),
+            ])
+            ->values();
 
         $fileName = "examinees_export_session_{$examSessionId}_" . now()->format('Ymd_His') . '.xlsx';
 
-        return Excel::download(new class($registrations) implements WithMultipleSheets {
+        return Excel::download(new class($registrations, $sessionLabel) implements WithMultipleSheets {
             /**
              * @param EloquentCollection<int, ExamRegistration> $registrations
              */
-            public function __construct(private EloquentCollection $registrations)
+            public function __construct(private EloquentCollection $registrations, private string $sessionLabel)
             {
             }
 
@@ -155,8 +195,10 @@ class ReportGenerator
                     $branch = $registration->examinee?->branch;
                     $location = $registration->testLocation;
                     $session = $registration->examSession;
+                    $pendingScore = $registration->examinee?->pending_score ?? 0;
+                    $specialScore = $registration->examinee?->special_score ?? 0;
                     $totalScore = $registration->examinee
-                        ? ((float) $registration->examinee->pending_score + (float) $registration->examinee->special_score)
+                        ? ((float) $pendingScore + (float) $specialScore)
                         : 0.0;
 
                     return [
@@ -168,8 +210,10 @@ class ReportGenerator
                         (string) ($branch?->name ?? '-'),
                         (string) ($location?->name ?? '-'),
                         (string) ($session?->year ?? '-'),
-                        (string) ($session?->exam_level_label ?? '-'),
+                        $this->sessionLabel,
                         (string) $registration->status,
+                        number_format((float) $pendingScore, 2),
+                        number_format((float) $specialScore, 2),
                         number_format($totalScore, 2),
                     ];
                 })->values();
@@ -226,6 +270,8 @@ class ReportGenerator
                                 'ปีการสอบ',
                                 'ระดับการสอบ',
                                 'สถานะ',
+                                'คะแนนค้างบรรจุ',
+                                'คะแนนเพิ่มพิเศษ',
                                 'คะแนนรวม',
                             ];
                         }

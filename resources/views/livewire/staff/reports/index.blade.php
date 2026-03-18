@@ -31,17 +31,6 @@
                     </div>
 
                     <div>
-                        <label for="exam_level" class="block text-sm font-medium text-gray-700">ระดับการสอบ</label>
-                        <select id="exam_level" wire:model.live="exam_level"
-                            class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
-                            <option value="">ทั้งหมด</option>
-                            <option value="sergeant_major">จ่าเอก</option>
-                            <option value="master_sergeant">พันจ่าเอก</option>
-                        </select>
-                        @error('exam_level') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
                         <label for="branch_id" class="block text-sm font-medium text-gray-700">เหล่า</label>
                         <select id="branch_id" wire:model.live="branch_id"
                             class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
@@ -58,12 +47,13 @@
                             สถานที่สอบ
                             @if ($reportType === 'examinee_list_pdf')
                                 <span class="text-red-600">*</span>
+                            @else
+                                <span class="text-xs text-gray-500">(ไม่เลือก = ทุกสถานที่)</span>
                             @endif
                         </label>
-                        <select id="test_location_id" wire:model.live="test_location_id"
-                            class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                            @disabled($reportType !== 'examinee_list_pdf')>
-                            <option value="">-- เลือกสถานที่สอบ --</option>
+                        <select id="test_location_id" wire:key="report-test-location-{{ $reportType }}" wire:model.live="test_location_id"
+                            class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500">
+                            <option value="">{{ $reportType === 'all_examinees_excel' ? '-- ทุกสถานที่สอบ --' : '-- เลือกสถานที่สอบ --' }}</option>
                             @foreach ($this->testLocations as $location)
                                 <option value="{{ $location->id }}">{{ $location->name }} ({{ $location->code }})</option>
                             @endforeach

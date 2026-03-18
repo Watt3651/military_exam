@@ -23,7 +23,6 @@ class Index extends Component
 
     public string $test_location_id = '';
     public string $branch_id = '';
-    public string $exam_level = '';
     public string $exam_session_id = '';
 
     public function mount(): void
@@ -52,7 +51,6 @@ class Index extends Component
         $rules = [
             'reportType' => ['required', 'in:examinee_list_pdf,all_examinees_excel'],
             'branch_id' => ['nullable', 'exists:branches,id'],
-            'exam_level' => ['nullable', 'in:sergeant_major,master_sergeant'],
             'exam_session_id' => ['nullable', 'exists:exam_sessions,id'],
         ];
 
@@ -75,10 +73,16 @@ class Index extends Component
             'test_location_id.required' => 'กรุณาเลือกสถานที่สอบ',
             'test_location_id.exists' => 'สถานที่สอบไม่ถูกต้อง',
             'branch_id.exists' => 'เหล่าไม่ถูกต้อง',
-            'exam_level.in' => 'ระดับการสอบไม่ถูกต้อง',
             'exam_session_id.required' => 'กรุณาเลือกรอบสอบ',
             'exam_session_id.exists' => 'รอบสอบไม่ถูกต้อง',
         ];
+    }
+
+    public function updatedReportType(string $value): void
+    {
+        if ($value === 'all_examinees_excel') {
+            $this->resetValidation('test_location_id');
+        }
     }
 
     #[Computed]
@@ -105,17 +109,25 @@ class Index extends Component
     public function generate(ReportGenerator $reportGenerator): BinaryFileResponse|IlluminateResponse
     {
         $validated = $this->validate();
+        $testLocationId = $validated['test_location_id'] ?? $this->test_location_id;
+        $branchId = $validated['branch_id'] ?? $this->branch_id;
+        $examSessionId = $validated['exam_session_id'] ?? $this->exam_session_id;
 
         if ($validated['reportType'] === 'all_examinees_excel') {
-            return $reportGenerator->exportAllExaminees((int) $validated['exam_session_id']);
+            return $reportGenerator->exportAllExaminees(
+                examSessionId: (int) $examSessionId,
+                filters: [
+                    'test_location_id' => $testLocationId !== '' ? (int) $testLocationId : null,
+                    'branch_id' => $branchId !== '' ? (int) $branchId : null,
+                ],
+            );
         }
 
         $pdf = $reportGenerator->generateExamineeListPDF(
-            testLocationId: (int) $validated['test_location_id'],
+            testLocationId: (int) $testLocationId,
             filters: [
-                'branch_id' => $validated['branch_id'] !== '' ? (int) $validated['branch_id'] : null,
-                'exam_level' => $validated['exam_level'] !== '' ? $validated['exam_level'] : null,
-                'exam_session_id' => $validated['exam_session_id'] !== '' ? (int) $validated['exam_session_id'] : null,
+                'branch_id' => $branchId !== '' ? (int) $branchId : null,
+                'exam_session_id' => $examSessionId !== '' ? (int) $examSessionId : null,
             ],
         );
 
