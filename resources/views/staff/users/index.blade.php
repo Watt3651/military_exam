@@ -61,7 +61,7 @@
                                             {{ $user->rank }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $user->role_label }}
+                                            <x-role-badge :role="$user->role" />
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <a href="{{ route('staff.users.edit', $user) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">แก้ไข</a>
