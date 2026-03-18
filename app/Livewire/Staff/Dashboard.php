@@ -119,7 +119,7 @@ class Dashboard extends Component
         return [
             'total' => $registrations->count(),
             'confirmed' => $registrations->where('status', ExamRegistration::STATUS_CONFIRMED)->count(),
-            'pending' => $registrations->where('status', ExamRegistration::STATUS_PENDING)->count(),
+            'pending' => $registrations->filter(fn (ExamRegistration $registration): bool => $registration->status === ExamRegistration::STATUS_CONFIRMED && empty($registration->exam_number))->count(),
         ];
     }
 

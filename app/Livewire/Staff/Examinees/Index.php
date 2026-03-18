@@ -24,6 +24,7 @@ class Index extends Component
     public string $searchName = '';
     public string $branchFilter = '';
     public string $testLocationFilter = '';
+    public string $examLevelFilter = '';
     public string $examNumberFilter = '';
     public int $perPage = 10;
 
@@ -50,6 +51,11 @@ class Index extends Component
     }
 
     public function updatedTestLocationFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedExamLevelFilter(): void
     {
         $this->resetPage();
     }
@@ -100,6 +106,12 @@ class Index extends Component
         if ($this->testLocationFilter !== '') {
             $query->whereHas('examRegistrations', function ($q): void {
                 $q->where('test_location_id', (int) $this->testLocationFilter);
+            });
+        }
+
+        if ($this->examLevelFilter !== '') {
+            $query->whereHas('examRegistrations', function ($q): void {
+                $q->where('exam_level', $this->examLevelFilter);
             });
         }
 
