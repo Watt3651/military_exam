@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Staff\PasswordSupport\Index as PasswordSupportIndex;
+use App\Livewire\Staff\PasswordSupport\History as PasswordSupportHistory;
 use App\Livewire\Staff\Users\CreateUser;
 use App\Livewire\Staff\Users\EditUser;
 use App\Livewire\Staff\Dashboard as StaffDashboard;
@@ -55,7 +57,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth', 'role:staff'])
+Route::middleware(['auth', 'role:staff,password_support', 'ensure.password.changed'])
+    ->prefix('staff')
+    ->name('staff.')
+    ->group(function () {
+        Route::prefix('password-support')->name('password-support.')->group(function () {
+            Route::get('/', PasswordSupportIndex::class)->name('index');
+            Route::get('/history', PasswordSupportHistory::class)->name('history');
+        });
+    });
+
+Route::middleware(['auth', 'role:staff', 'ensure.password.changed'])
     ->prefix('staff')
     ->name('staff.')
     ->group(function () {
@@ -179,7 +191,7 @@ Route::middleware(['auth', 'role:staff'])
         Route::prefix('users')->name('users.')->group(function () {
             // รายการผู้ใช้งานทั้งหมด
             Route::get('/', function () {
-                $users = \App\Models\User::whereIn('role', ['staff', 'commander'])
+                $users = \App\Models\User::whereIn('role', ['staff', 'commander', 'password_support'])
                     ->orderBy('created_at', 'desc')
                     ->paginate(15);
                 return view('staff.users.index', compact('users'));

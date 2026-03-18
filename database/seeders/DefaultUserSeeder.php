@@ -10,10 +10,11 @@ use Illuminate\Support\Facades\Hash;
 /**
  * DefaultUserSeeder — บัญชีทดสอบเริ่มต้น (Section 5.3.4)
  *
- * สร้างบัญชีทดสอบ 3 บทบาท:
+ * สร้างบัญชีทดสอบ 4 บทบาท:
  *   1. Staff (Admin)  — จัดการระบบทั้งหมด
  *   2. Commander       — ดูรายงาน read-only
- *   3. Examinee        — ผู้เข้าสอบทดสอบ (พร้อมข้อมูล examinee)
+ *   3. Password Support — ช่วยรีเซ็ตรหัสผ่าน
+ *   4. Examinee        — ผู้เข้าสอบทดสอบ (พร้อมข้อมูล examinee)
  *
  * ⚠️  ควรเปลี่ยนรหัสผ่านหลังจาก deploy ขึ้น production
  */
@@ -61,7 +62,28 @@ class DefaultUserSeeder extends Seeder
 
         /*
         |----------------------------------------------------------------------
-        | 3. Default Examinee Account (ผู้เข้าสอบทดสอบ)
+        | 3. Default Password Support Account
+        |----------------------------------------------------------------------
+        */
+        $passwordSupport = User::updateOrCreate(
+            ['national_id' => '1000000000003'],
+            [
+                'rank' => 'พ.จ.อ.',
+                'first_name' => 'Support',
+                'last_name' => 'Password',
+                'email' => 'password-support@exam.military.th',
+                'password' => Hash::make('password'),
+                'role' => 'password_support',
+                'is_active' => true,
+                'must_change_password' => false,
+                'created_by' => $staff->id,
+            ],
+        );
+        $passwordSupport->syncRoles('password_support');
+
+        /*
+        |----------------------------------------------------------------------
+        | 4. Default Examinee Account (ผู้เข้าสอบทดสอบ)
         |----------------------------------------------------------------------
         */
         $examineeUser = User::updateOrCreate(
@@ -74,6 +96,7 @@ class DefaultUserSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'role' => 'examinee',
                 'is_active' => true,
+                'must_change_password' => false,
                 'created_by' => $staff->id,
             ],
         );
@@ -106,6 +129,7 @@ class DefaultUserSeeder extends Seeder
         $this->command->info('   ├─────────────┼─────────────────┼──────────┼───────────┤');
         $this->command->info('   │ Staff       │ 1000000000001   │ password │ Admin     │');
         $this->command->info('   │ Commander   │ 1000000000002   │ password │ Commander │');
+        $this->command->info('   │ PwdSupport  │ 1000000000003   │ password │ Support   │');
         $this->command->info('   │ Examinee    │ 1234567890123   │ password │ สมชาย      │');
         $this->command->info('   └─────────────┴─────────────────┴──────────┴───────────┘');
     }

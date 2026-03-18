@@ -70,18 +70,38 @@
                                 <tr>
                                     <td class="py-2 pr-4 font-medium text-gray-500">Role (column)</td>
                                     <td class="py-2">
-                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                            {{ auth()->user()->role }}
-                                        </span>
+                                        <x-role-badge :role="auth()->user()->role" />
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="py-2 pr-4 font-medium text-gray-500">Spatie Roles</td>
-                                    <td class="py-2 text-gray-900">{{ auth()->user()->getRoleNames()->implode(', ') ?: '-' }}</td>
+                                    <td class="py-2 text-gray-900">
+                                        @php($roles = auth()->user()->getRoleNames())
+                                        @if ($roles->isNotEmpty())
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach ($roles as $role)
+                                                    <x-role-badge :role="$role" />
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="py-2 pr-4 font-medium text-gray-500">Spatie Permissions</td>
-                                    <td class="py-2 text-gray-900">{{ auth()->user()->getAllPermissions()->pluck('name')->implode(', ') ?: '-' }}</td>
+                                    <td class="py-2 text-gray-900">
+                                        @php($permissions = auth()->user()->getAllPermissions()->pluck('name'))
+                                        @if ($permissions->isNotEmpty())
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach ($permissions as $permission)
+                                                    <x-permission-badge :permission="$permission" />
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="py-2 pr-4 font-medium text-gray-500">Email</td>

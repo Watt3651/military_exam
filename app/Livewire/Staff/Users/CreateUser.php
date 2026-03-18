@@ -13,7 +13,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.staff')]
-#[Title('สร้างผู้ใช้งาน Staff/Commander')]
+#[Title('สร้างผู้ใช้งานเจ้าหน้าที่')]
 class CreateUser extends Component
 {
     /**
@@ -42,7 +42,7 @@ class CreateUser extends Component
     public string $email = '';
 
     /**
-     * Role (staff/commander)
+     * Role (staff/commander/password_support)
      */
     public string $role = 'staff';
 
@@ -82,7 +82,7 @@ class CreateUser extends Component
     public function mount(): void
     {
         // Only staff can access
-        if (!Auth::check() || !Auth::user()->isStaff()) {
+        if (! Auth::check() || Auth::user()?->role !== 'staff') {
             abort(403, 'เฉพาะเจ้าหน้าที่ (Staff) เท่านั้นที่สามารถเข้าถึงหน้านี้ได้');
         }
     }
@@ -126,7 +126,7 @@ class CreateUser extends Component
             'role' => [
                 'required',
                 'string',
-                Rule::in(['staff', 'commander']),
+                Rule::in(['staff', 'commander', 'password_support']),
             ],
         ];
 
@@ -191,8 +191,8 @@ class CreateUser extends Component
     }
 
     /**
-     * Create new staff/commander user
-     * Section 2.1.3: Register สำหรับ Staff/Commander (Admin Only)
+     * Create new support user
+     * Section 2.1.3: Register สำหรับ Staff/Commander/Password Support (Admin Only)
      *
      * Process:
      * 1. Validate input
@@ -222,6 +222,7 @@ class CreateUser extends Component
             'password' => Hash::make($password),
             'role' => $validated['role'],
             'is_active' => true,
+            'must_change_password' => true,
             'created_by' => Auth::id(), // Save creator staff_id
         ]);
 

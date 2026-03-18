@@ -12,6 +12,9 @@ use App\Services\ScoreCalculator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -46,6 +49,10 @@ class Edit extends Component
     public string $exam_number = '';
     public string $registration_status = ExamRegistration::STATUS_PENDING;
     public string $reason = '';
+    public string $reset_password = '';
+    public string $reset_password_confirmation = '';
+    public bool $auto_generate_password = false;
+    public ?string $generated_password = null;
 
     public function mount(int $id): void
     {
@@ -163,7 +170,23 @@ class Edit extends Component
             'reason.min' => 'เหตุผลต้องมีอย่างน้อย 5 ตัวอักษร',
             'test_location_id.exists' => 'สถานที่สอบไม่ถูกต้อง',
             'registration_status.in' => 'สถานะการลงทะเบียนไม่ถูกต้อง',
+            'reset_password.required' => 'กรุณากรอกรหัสผ่านใหม่',
+            'reset_password.min' => 'รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร',
+            'reset_password.confirmed' => 'ยืนยันรหัสผ่านใหม่ไม่ตรงกัน',
         ];
+    }
+
+    public function updatedAutoGeneratePassword($value): void
+    {
+        if ($value) {
+            $this->reset_password = '';
+            $this->reset_password_confirmation = '';
+        }
+    }
+
+    protected function generatePassword(): string
+    {
+        return Str::password(12);
     }
 
     public function save(): void
@@ -231,6 +254,41 @@ class Edit extends Component
         $this->reason = '';
         $this->loadEditLogs();
         session()->flash('success', 'บันทึกการแก้ไขข้อมูลผู้เข้าสอบเรียบร้อย');
+    }
+
+    public function resetPassword(): void
+    {
+        $rules = [];
+
+        if (! $this->auto_generate_password) {
+            $rules['reset_password'] = [
+                'required',
+                'string',
+                'confirmed',
+                'min:8',
+                Password::defaults(),
+            ];
+        }
+
+        if ($rules !== []) {
+            $this->validate($rules);
+        }
+
+        $password = $this->auto_generate_password
+            ? $this->generatePassword()
+            : $this->reset_password;
+
+        $this->examinee->user->update([
+            'password' => Hash::make($password),
+            'must_change_password' => true,
+        ]);
+
+        $this->generated_password = $password;
+        $this->reset_password = '';
+        $this->reset_password_confirmation = '';
+        $this->resetValidation(['reset_password', 'reset_password_confirmation']);
+
+        session()->flash('success', 'รีเซ็ตรหัสผ่านผู้สมัครสอบเรียบร้อย');
     }
 
     private function logIfChanged(string $field, ?string $oldValue, ?string $newValue, int $editedBy, string $reason): void

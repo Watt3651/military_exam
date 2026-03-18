@@ -13,7 +13,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.staff')]
-#[Title('แก้ไขผู้ใช้งาน Staff/Commander')]
+#[Title('แก้ไขผู้ใช้งานเจ้าหน้าที่')]
 class EditUser extends Component
 {
     /**
@@ -42,7 +42,7 @@ class EditUser extends Component
     public string $email = '';
 
     /**
-     * Role (staff/commander)
+     * Role (staff/commander/password_support)
      */
     public string $role = 'staff';
 
@@ -51,13 +51,21 @@ class EditUser extends Component
      */
     public int $userId;
 
+    public string $reset_password = '';
+
+    public string $reset_password_confirmation = '';
+
+    public bool $auto_generate_password = false;
+
+    public ?string $generated_password = null;
+
     /**
      * Mount component - load user data
      */
     public function mount($id): void
     {
         // Only staff can access
-        if (!Auth::check() || !Auth::user()->hasRole('staff')) {
+        if (! Auth::check() || Auth::user()?->role !== 'staff') {
             abort(403, 'เฉพาะเจ้าหน้าที่ (Staff) เท่านั้นที่สามารถเข้าถึงหน้านี้ได้');
         }
 
@@ -112,7 +120,7 @@ class EditUser extends Component
             'role' => [
                 'required',
                 'string',
-                Rule::in(['staff', 'commander']),
+                Rule::in(['staff', 'commander', 'password_support']),
             ],
         ];
     }
@@ -135,7 +143,23 @@ class EditUser extends Component
             'email.unique' => 'อีเมลนี้ถูกใช้งานแล้ว',
             'role.required' => 'กรุณาเลือกบทบาท',
             'role.in' => 'บทบาทไม่ถูกต้อง',
+            'reset_password.required' => 'กรุณากรอกรหัสผ่านใหม่',
+            'reset_password.min' => 'รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร',
+            'reset_password.confirmed' => 'ยืนยันรหัสผ่านใหม่ไม่ตรงกัน',
         ];
+    }
+
+    public function updatedAutoGeneratePassword($value): void
+    {
+        if ($value) {
+            $this->reset_password = '';
+            $this->reset_password_confirmation = '';
+        }
+    }
+
+    protected function generatePassword(): string
+    {
+        return Str::password(12);
     }
 
     /**
@@ -165,6 +189,42 @@ class EditUser extends Component
 
         // Redirect to index
         return redirect()->route('staff.users.index');
+    }
+
+    public function resetPassword(): void
+    {
+        $rules = [];
+
+        if (! $this->auto_generate_password) {
+            $rules['reset_password'] = [
+                'required',
+                'string',
+                'confirmed',
+                'min:8',
+                Password::defaults(),
+            ];
+        }
+
+        if ($rules !== []) {
+            $this->validate($rules);
+        }
+
+        $password = $this->auto_generate_password
+            ? $this->generatePassword()
+            : $this->reset_password;
+
+        $user = User::findOrFail($this->userId);
+        $user->update([
+            'password' => Hash::make($password),
+            'must_change_password' => true,
+        ]);
+
+        $this->generated_password = $password;
+        $this->reset_password = '';
+        $this->reset_password_confirmation = '';
+        $this->resetValidation(['reset_password', 'reset_password_confirmation']);
+
+        session()->flash('success', 'รีเซ็ตรหัสผ่านผู้ใช้งานเรียบร้อย');
     }
 
     /**

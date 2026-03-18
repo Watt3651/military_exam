@@ -9,7 +9,7 @@ use Spatie\Permission\Models\Role;
 /**
  * RolePermissionSeeder — Roles & Permissions (Section 3.3)
  *
- * 3 Roles: examinee, staff, commander
+ * 4 Roles: examinee, staff, commander, password_support
  * Staff ได้ permissions ทั้งหมด (full control)
  */
 class RolePermissionSeeder extends Seeder
@@ -29,6 +29,9 @@ class RolePermissionSeeder extends Seeder
             'self_register',
             'create_staff_account',
             'create_commander_account',
+            'create_password_support_account',
+            'view_password_support_page',
+            'reset_user_password',
 
             // Dashboard
             'view_own_dashboard',
@@ -160,7 +163,18 @@ class RolePermissionSeeder extends Seeder
             'view_edit_logs',
         ]);
 
-        $this->command->info('✅ Roles seeded: examinee (' . $examineeRole->permissions->count() . '), staff (' . $staffRole->permissions->count() . '), commander (' . $commanderRole->permissions->count() . ')');
+        // ── Password Support (reset password only) ──
+        $passwordSupportRole = Role::firstOrCreate(
+            ['name' => 'password_support'],
+            ['guard_name' => 'web']
+        );
+        $passwordSupportRole->syncPermissions([
+            'view_own_profile',
+            'view_password_support_page',
+            'reset_user_password',
+        ]);
+
+        $this->command->info('✅ Roles seeded: examinee (' . $examineeRole->permissions->count() . '), staff (' . $staffRole->permissions->count() . '), commander (' . $commanderRole->permissions->count() . '), password_support (' . $passwordSupportRole->permissions->count() . ')');
         $this->command->info('✅ Permissions seeded: ' . count($permissions) . ' permissions');
     }
 }

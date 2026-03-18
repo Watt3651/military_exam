@@ -41,7 +41,22 @@
                         ['route' => 'staff.test-locations.index', 'label' => 'สถานที่สอบ', 'icon' => 'location', 'pattern' => 'staff.test-locations.*'],
                         ['route' => 'staff.branches.index', 'label' => 'เหล่า', 'icon' => 'menu', 'pattern' => 'staff.branches.*'],
                         ['route' => 'staff.reports.index', 'label' => 'รายงาน', 'icon' => 'chart', 'pattern' => 'staff.reports.*'],
+                        ['route' => 'staff.password-support.index', 'label' => 'ช่วยรีเซ็ตรหัสผ่าน', 'icon' => 'key', 'pattern' => 'staff.password-support.*'],
+                        ['route' => 'staff.password-support.history', 'label' => 'ประวัติรีเซ็ตรหัสผ่าน', 'icon' => 'clock', 'pattern' => 'staff.password-support.*'],
                         ['route' => 'staff.users.index', 'label' => 'ผู้ใช้งาน', 'icon' => 'users', 'pattern' => 'staff.users.*'],
+                    ],
+                ],
+                'password_support' => [
+                    'bg' => 'bg-blue-500',
+                    'border' => 'border-primary-700',
+                    'text' => 'text-black',
+                    'hoverText' => 'hover:text-white',
+                    'hoverBorder' => 'border-blue-300',
+                    'logoText' => 'ช่วยรีเซ็ตรหัสผ่าน',
+                    'dashboardRoute' => 'staff.password-support.index',
+                    'menu' => [
+                        ['route' => 'staff.password-support.index', 'label' => 'ช่วยรีเซ็ตรหัสผ่าน', 'icon' => 'key', 'pattern' => 'staff.password-support.*'],
+                        ['route' => 'staff.password-support.history', 'label' => 'ประวัติรีเซ็ตรหัสผ่าน', 'icon' => 'clock', 'pattern' => 'staff.password-support.*'],
                     ],
                 ],
                 'examinee' => [
@@ -85,6 +100,7 @@
                 'location' => 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z',
                 'menu' => 'M4 7h16M4 12h16M4 17h16',
                 'chart' => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                'key' => 'M15 7a2 2 0 11-4 0 2 2 0 014 0zM7 14a2 2 0 012-2h7l2 2-2 2h-2v2h-2v-2H9a2 2 0 01-2-2z',
                 'user' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
                 'clock' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
             ];
@@ -128,7 +144,7 @@
                             <form method="POST" action="{{ route('logout') }}" class="mr-3">
                                 @csrf
                                 <button type="submit"
-                                    class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium {{ $role === 'staff' ? 'text-gray-700 bg-white hover:bg-red-100' : 'text-black hover:text-blue-600 bg-white/90 hover:bg-white' }} transition duration-150 ease-in-out">
+                                    class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium {{ in_array($role, ['staff', 'password_support'], true) ? 'text-gray-700 bg-white hover:bg-red-100' : 'text-black hover:text-blue-600 bg-white/90 hover:bg-white' }} transition duration-150 ease-in-out">
                                     ออกจากระบบ
                                 </button>
                             </form>
