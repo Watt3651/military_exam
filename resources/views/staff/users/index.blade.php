@@ -48,7 +48,7 @@
                                         สิทธิ์
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        การกระทำ
+                                        จัดการ
                                     </th>
                                 </tr>
                             </thead>
@@ -65,11 +65,11 @@
                                             <x-role-badge :role="$user->role" />
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="{{ route('staff.users.edit', $user) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">แก้ไข</a>
+                                            <a href="{{ route('staff.users.edit', $user) }}" class="px-3 py-1.5 rounded-md bg-amber-100 text-amber-800 hover:bg-amber-200 text-xs font-medium">แก้ไข</a>
                                             <form method="POST" action="{{ route('staff.users.destroy', $user) }}" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('คุณต้องการลบผู้ใช้นี้หรือไม่?')">ลบ</button>
+                                                <button type="submit" class="px-3 py-1.5 rounded-md bg-red-100 text-red-700 hover:bg-red-200 text-xs font-medium" onclick="return confirm('คุณต้องการลบผู้ใช้นี้หรือไม่?')">ลบ</button>
                                             </form>
                                         </td>
                                     </tr>
