@@ -5,11 +5,14 @@
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900">Dashboard - เจ้าหน้าที่</h2>
                     <p class="mt-1 text-sm text-gray-500">
-                        สรุปข้อมูลรอบสอบปัจจุบันและสถิติภาพรวมสำหรับการติดตามสถานะผู้สมัคร
+                        สรุปข้อมูลและสถิติของรอบสอบปัจจุบันตามตัวกรองที่เลือกสำหรับติดตามสถานะผู้สมัคร
                     </p>
                 </div>
                 <div class="text-sm text-gray-600">
-                    @if ($this->currentSession)
+                    @if ($examLevelFilter === '' && $yearFilter !== '')
+                        ปีที่เลือก:
+                        <span class="font-semibold text-gray-900">{{ $yearFilter }} (ทุกระดับ)</span>
+                    @elseif ($this->currentSession)
                         รอบปัจจุบัน:
                         <span class="font-semibold text-gray-900">{{ $this->currentSession->display_name }}</span>
                     @else
@@ -66,15 +69,15 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white shadow-sm sm:rounded-lg border border-gray-100 p-6">
-                <p class="text-sm font-medium text-gray-500">จำนวนผู้สมัครทั้งหมด</p>
+                <p class="text-sm font-medium text-gray-500">จำนวนผู้สมัครทั้งหมดในรอบปัจจุบัน</p>
                 <p class="mt-2 text-3xl font-bold text-gray-900">{{ $this->summary['total'] }}</p>
             </div>
             <div class="bg-white shadow-sm sm:rounded-lg border border-gray-100 p-6">
-                <p class="text-sm font-medium text-gray-500">จำนวนที่ยืนยันการสมัครแล้ว</p>
+                <p class="text-sm font-medium text-gray-500">จำนวนที่ยืนยันการสมัครแล้วในรอบปัจจุบัน</p>
                 <p class="mt-2 text-3xl font-bold text-green-700">{{ $this->summary['confirmed'] }}</p>
             </div>
             <div class="bg-white shadow-sm sm:rounded-lg border border-gray-100 p-6">
-                <p class="text-sm font-medium text-gray-500">จำนวนที่ยืนยันแล้วแต่ยังไม่มีหมายเลขสอบ</p>
+                <p class="text-sm font-medium text-gray-500">จำนวนที่ยืนยันแล้วแต่ยังไม่มีหมายเลขสอบในรอบปัจจุบัน</p>
                 <p class="mt-2 text-3xl font-bold text-amber-600">{{ $this->summary['pending'] }}</p>
             </div>
         </div>
@@ -84,7 +87,7 @@
                  x-data="barChartComponent(@js($this->locationChart))"
                  x-init="init()"
                  x-effect="update(@js($this->locationChart))">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">จำนวนแยกตามสถานที่สอบ (Bar Chart)</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">จำนวนแยกตามสถานที่สอบในรอบปัจจุบัน (Bar Chart)</h3>
                 <div x-ref="chart" class="min-h-[320px]"></div>
             </div>
 
@@ -92,7 +95,7 @@
                  x-data="pieChartComponent(@js($this->branchChart))"
                  x-init="init()"
                  x-effect="update(@js($this->branchChart))">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">จำนวนแยกตามเหล่า (Pie Chart)</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">จำนวนแยกตามเหล่าในรอบปัจจุบัน (Pie Chart)</h3>
                 <div x-ref="chart" class="min-h-[320px]"></div>
             </div>
         </div>
@@ -101,7 +104,7 @@
              x-data="donutChartComponent(@js($this->levelChart))"
              x-init="init()"
              x-effect="update(@js($this->levelChart))">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">จำนวนแยกตามระดับ (Donut Chart)</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">จำนวนแยกตามระดับในรอบปัจจุบัน (Donut Chart)</h3>
             <div x-ref="chart" class="min-h-[320px]"></div>
         </div>
     </div>

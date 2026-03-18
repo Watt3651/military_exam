@@ -77,8 +77,7 @@ class Dashboard extends Component
     #[Computed]
     public function currentSessionRegistrations(): Collection
     {
-        $session = $this->currentSession;
-        if (! $session && $this->examLevelFilter === '') {
+        if ($this->yearFilter === '' && ! $this->currentSession) {
             return collect();
         }
 
@@ -95,7 +94,7 @@ class Dashboard extends Component
                         ->orWhereHas('positionQuota', fn ($quotaQ) => $quotaQ->where('exam_level', $level))
                         ->orWhereHas('examSession', fn ($sessionQ) => $sessionQ->where('exam_level', $level));
                 });
-            }, fn ($q) => $q->where('exam_session_id', $session->id))
+            })
             ->when($this->testLocationFilter !== '', fn ($q) => $q->where('test_location_id', (int) $this->testLocationFilter))
             ->when($this->branchFilter !== '', fn ($q) => $q->whereHas('examinee', fn ($subQ) => $subQ->where('branch_id', (int) $this->branchFilter)))
             ->with([
@@ -179,24 +178,7 @@ class Dashboard extends Component
     #[Computed]
     public function levelChart(): array
     {
-        $registrations = ExamRegistration::query()
-            ->where('status', '!=', ExamRegistration::STATUS_CANCELLED)
-            ->when($this->yearFilter !== '', function ($q): void {
-                $year = (int) $this->yearFilter;
-                $q->whereHas('examSession', fn ($subQ) => $subQ->where('year', $year));
-            })
-            ->when($this->examLevelFilter !== '', function ($q): void {
-                $level = $this->examLevelFilter;
-                $q->where(function ($subQ) use ($level): void {
-                    $subQ->where('exam_level', $level)
-                        ->orWhereHas('positionQuota', fn ($quotaQ) => $quotaQ->where('exam_level', $level))
-                        ->orWhereHas('examSession', fn ($sessionQ) => $sessionQ->where('exam_level', $level));
-                });
-            })
-            ->when($this->testLocationFilter !== '', fn ($q) => $q->where('test_location_id', (int) $this->testLocationFilter))
-            ->when($this->branchFilter !== '', fn ($q) => $q->whereHas('examinee', fn ($subQ) => $subQ->where('branch_id', (int) $this->branchFilter)))
-            ->with(['examSession:id,exam_level', 'positionQuota:id,exam_level'])
-            ->get();
+        $registrations = $this->currentSessionRegistrations;
 
         $labelsMap = [
             ExamSession::LEVEL_SERGEANT_MAJOR => ExamSession::LEVEL_LABELS[ExamSession::LEVEL_SERGEANT_MAJOR],
