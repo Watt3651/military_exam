@@ -78,13 +78,24 @@ class Dashboard extends Component
     public function currentSessionRegistrations(): Collection
     {
         $session = $this->currentSession;
-        if (! $session) {
+        if (! $session && $this->examLevelFilter === '') {
             return collect();
         }
 
         return ExamRegistration::query()
-            ->where('exam_session_id', $session->id)
             ->where('status', '!=', ExamRegistration::STATUS_CANCELLED)
+            ->when($this->yearFilter !== '', function ($q): void {
+                $year = (int) $this->yearFilter;
+                $q->whereHas('examSession', fn ($subQ) => $subQ->where('year', $year));
+            })
+            ->when($this->examLevelFilter !== '', function ($q): void {
+                $level = $this->examLevelFilter;
+                $q->where(function ($subQ) use ($level): void {
+                    $subQ->where('exam_level', $level)
+                        ->orWhereHas('positionQuota', fn ($quotaQ) => $quotaQ->where('exam_level', $level))
+                        ->orWhereHas('examSession', fn ($sessionQ) => $sessionQ->where('exam_level', $level));
+                });
+            }, fn ($q) => $q->where('exam_session_id', $session->id))
             ->when($this->testLocationFilter !== '', fn ($q) => $q->where('test_location_id', (int) $this->testLocationFilter))
             ->when($this->branchFilter !== '', fn ($q) => $q->whereHas('examinee', fn ($subQ) => $subQ->where('branch_id', (int) $this->branchFilter)))
             ->with([
@@ -92,6 +103,7 @@ class Dashboard extends Component
                 'examinee:id,user_id,branch_id',
                 'examinee.branch:id,name,code',
                 'examSession:id,year,exam_level',
+                'positionQuota:id,exam_level',
             ])
             ->get();
     }
@@ -202,11 +214,15 @@ class Dashboard extends Component
             })
             ->when($this->examLevelFilter !== '', function ($q): void {
                 $level = $this->examLevelFilter;
-                $q->whereHas('examSession', fn ($subQ) => $subQ->where('exam_level', $level));
+                $q->where(function ($subQ) use ($level): void {
+                    $subQ->where('exam_level', $level)
+                        ->orWhereHas('positionQuota', fn ($quotaQ) => $quotaQ->where('exam_level', $level))
+                        ->orWhereHas('examSession', fn ($sessionQ) => $sessionQ->where('exam_level', $level));
+                });
             })
             ->when($this->testLocationFilter !== '', fn ($q) => $q->where('test_location_id', (int) $this->testLocationFilter))
             ->when($this->branchFilter !== '', fn ($q) => $q->whereHas('examinee', fn ($subQ) => $subQ->where('branch_id', (int) $this->branchFilter)))
-            ->with('examSession:id,exam_level')
+            ->with(['examSession:id,exam_level', 'positionQuota:id,exam_level'])
             ->get();
 
         $labelsMap = [
@@ -216,7 +232,9 @@ class Dashboard extends Component
 
         $counts = collect($labelsMap)->map(fn () => 0)->all();
         foreach ($registrations as $registration) {
-            $level = $registration->examSession?->exam_level;
+            $level = $registration->exam_level
+                ?? $registration->positionQuota?->exam_level
+                ?? $registration->examSession?->exam_level;
             if ($level && array_key_exists($level, $counts)) {
                 $counts[$level]++;
             }
@@ -238,7 +256,11 @@ class Dashboard extends Component
             ->whereHas('examSession', fn ($q) => $q->where('year', $year))
             ->when($this->examLevelFilter !== '', function ($q): void {
                 $level = $this->examLevelFilter;
-                $q->whereHas('examSession', fn ($subQ) => $subQ->where('exam_level', $level));
+                $q->where(function ($subQ) use ($level): void {
+                    $subQ->where('exam_level', $level)
+                        ->orWhereHas('positionQuota', fn ($quotaQ) => $quotaQ->where('exam_level', $level))
+                        ->orWhereHas('examSession', fn ($sessionQ) => $sessionQ->where('exam_level', $level));
+                });
             })
             ->when($this->testLocationFilter !== '', fn ($q) => $q->where('test_location_id', (int) $this->testLocationFilter))
             ->when($this->branchFilter !== '', fn ($q) => $q->whereHas('examinee', fn ($subQ) => $subQ->where('branch_id', (int) $this->branchFilter)))
