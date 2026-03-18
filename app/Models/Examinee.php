@@ -29,7 +29,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property int $branch_id FK branches — เหล่า
  * @property int $age อายุ
  * @property int $eligible_year ปีที่มีสิทธิ์สอบ (พ.ศ.)
- * @property int $suspended_years ปีที่ถูกงดบำเหน็จ
+ * @property array<int> $suspended_years ปี พ.ศ. ที่ถูกงดบำเหน็จ [2566, 2567, ...]
  * @property float $pending_score คะแนนค้างบรรจุ (auto-calculated)
  * @property float $special_score คะแนนพิเศษ (จาก border_area)
  * @property int|null $border_area_id FK border_areas
@@ -71,7 +71,7 @@ class Examinee extends Model
         return [
             'age' => 'integer',
             'eligible_year' => 'integer',
-            'suspended_years' => 'integer',
+            'suspended_years' => 'array', // เปลี่ยนเป็น array เก็บปี พ.ศ. [2566, 2567, ...]
             'pending_score' => 'decimal:2',
             'special_score' => 'decimal:2',
         ];
@@ -205,14 +205,23 @@ class Examinee extends Model
     */
 
     /**
-     * คำนวณคะแนนค้างบรรจุ
-     * สูตร: (ปีปัจจุบัน - ปีที่มีสิทธิ์สอบ) - ปีที่ถูกงดบำเหน็จ
+     * คำนวณคะแนนค้างบรรจุ แบบขั้นบันได พร้อมหักตามปีที่ถูกงดบำเหน็จ
+     * 
+     * ใช้ ScoreCalculator service เพื่อคำนวณตามเกณฑ์ขั้นบันได
+     *
+     * @param int|null $currentYear ปีปัจจุบัน พ.ศ.
+     * @return float คะแนนค้างบรรจุ
      */
     public function calculatePendingScore(?int $currentYear = null): float
     {
         $currentYear = $currentYear ?? (int) date('Y') + 543; // พ.ศ.
 
-        return max(0, ($currentYear - $this->eligible_year) - $this->suspended_years);
+        $calculator = new \App\Services\ScoreCalculator();
+        return $calculator->calculatePendingScore(
+            eligibleYear: $this->eligible_year,
+            suspendedYears: $this->suspended_years ?? [],
+            currentYear: $currentYear
+        );
     }
 
     /**

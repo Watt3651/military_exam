@@ -36,19 +36,11 @@
                 </div>
 
                 <div>
-                    <label for="position_name" class="block text-sm font-medium text-gray-700">ตำแหน่ง</label>
-                    <input id="position_name" type="text" wire:model.live="position_name"
+                    <label for="position_name" class="block text-sm font-medium text-gray-700">ตำแหน่ง <span class="text-red-500">*</span></label>
+                    <input id="position_name" type="text" wire:model="position_name"
                         class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                        placeholder="เช่น ผบ.หมู่">
+                        placeholder="เช่น จ01, พ01">
                     @error('position_name') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="quota_count" class="block text-sm font-medium text-gray-700">จำนวนอัตรา</label>
-                    <input id="quota_count" type="number" min="0" wire:model.live="quota_count"
-                        class="mt-1 block w-full rounded-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                        placeholder="เช่น 50">
-                    @error('quota_count') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="md:col-span-3 flex items-center justify-end gap-2 pt-2">
@@ -81,21 +73,11 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                รอบสอบ</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                ตำแหน่ง</th>
-                            <th
-                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                อัตรา</th>
-                            <th
-                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                สมัครแล้ว</th>
-                            <th
-                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                คงเหลือ</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รอบสอบ</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ตำแหน่ง</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">จำนวนที่สมัคร</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
@@ -106,13 +88,10 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ $quota->position_name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
-                                    {{ $quota->quota_count }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
                                     {{ $quota->registered_count }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
-                                    {{ max(0, $quota->quota_count - $quota->registered_count) }}
+                                    <span class="text-gray-400">ไม่จำกัด</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right">
                                     <div class="inline-flex items-center gap-2">

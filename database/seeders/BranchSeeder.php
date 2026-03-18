@@ -20,10 +20,6 @@ class BranchSeeder extends Seeder
             ['name' => 'ทหารช่าง', 'code' => '3', 'is_active' => true],
             ['name' => 'ทหารสื่อสาร', 'code' => '4', 'is_active' => true],
             ['name' => 'ทหารขนส่ง', 'code' => '5', 'is_active' => true],
-            // ['name' => 'ทหารม้า', 'code' => '6', 'is_active' => true],
-            // ['name' => 'ทหารสรรพาวุธ', 'code' => '7', 'is_active' => true],
-            // ['name' => 'ทหารพลาธิการ', 'code' => '8', 'is_active' => true],
-            // ['name' => 'ทหารการเงิน', 'code' => '9', 'is_active' => true],
         ];
 
         foreach ($branches as $branch) {

@@ -7,10 +7,12 @@ use App\Models\Branch;
 use App\Models\Examinee;
 use App\Models\ExamRegistration as ExamRegistrationModel;
 use App\Models\ExamSession;
+use App\Models\PositionQuota;
 use App\Models\TestLocation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -36,7 +38,7 @@ class ExamRegistration extends Component
     public string $branch_id = '';
     public string $age = '';
     public string $eligible_year = '';
-    public string $suspended_years = '0';
+    public array $suspended_years = []; // เปลี่ยนเป็น array เก็บปี พ.ศ.
     public string $border_area_id = '';
     public string $test_location_id = '';
     public string $exam_level = '';
@@ -56,6 +58,10 @@ class ExamRegistration extends Component
     public Collection $branches;
     public Collection $borderAreas;
     public Collection $testLocations;
+    public Collection $positionQuotas;
+
+    // ─── Suspended Years Options ───
+    public array $availableSuspendedYears = [];
 
     public function mount(): void
     {
@@ -81,22 +87,65 @@ class ExamRegistration extends Component
                 return;
             }
 
-            // Pre-fill from existing examinee data
-            $this->position = $examinee->position ?? '';
+            // ─── Load existing examinee data (if any) ───
             $this->branch_id = (string) ($examinee->branch_id ?? '');
             $this->age = (string) ($examinee->age ?? '');
             $this->eligible_year = (string) ($examinee->eligible_year ?? '');
-            $this->suspended_years = (string) ($examinee->suspended_years ?? '0');
+            // แปลง suspended_years เป็น array
+            $suspendedYears = $examinee->suspended_years ?? [];
+            $this->suspended_years = is_array($suspendedYears) ? $suspendedYears : [];
             $this->border_area_id = (string) ($examinee->border_area_id ?? '');
+
+            // Generate available suspended years options
+            $this->generateAvailableSuspendedYears();
         }
 
         // ─── Load Dropdown Data ───
         $this->branches = Branch::where('is_active', true)->orderBy('code')->get();
         $this->borderAreas = BorderArea::where('is_active', true)->orderBy('code')->get();
         $this->testLocations = TestLocation::where('is_active', true)->orderBy('code')->get();
+        $this->positionQuotas = collect(); // Will be loaded based on exam level
 
         // ─── Initial calculation ───
         $this->recalculate();
+    }
+
+    /**
+     * สร้างรายการปีที่สามารถเลือกเป็นปีงดบำเหน็จได้
+     */
+    public function generateAvailableSuspendedYears(): void
+    {
+        $currentYear = (int) date('Y') + 543;
+        $eligibleYear = (int) $this->eligible_year;
+
+        $this->availableSuspendedYears = [];
+        if ($eligibleYear > 0 && $eligibleYear <= $currentYear) {
+            for ($year = $eligibleYear; $year <= $currentYear; $year++) {
+                $yearIndex = $year - $eligibleYear + 1;
+                $points = $this->getTierPoints($yearIndex);
+                $this->availableSuspendedYears[] = [
+                    'year' => $year,
+                    'index' => $yearIndex,
+                    'points' => $points,
+                ];
+            }
+        }
+    }
+
+    /**
+     * ดึงคะแนนตาม tier ของปี
+     */
+    private function getTierPoints(int $yearIndex): int
+    {
+        if ($yearIndex <= 5) {
+            return 2;
+        } elseif ($yearIndex <= 10) {
+            return 3;
+        } elseif ($yearIndex <= 15) {
+            return 4;
+        } else {
+            return 5;
+        }
     }
 
     /*
@@ -110,6 +159,7 @@ class ExamRegistration extends Component
      */
     public function updatedEligibleYear(): void
     {
+        $this->generateAvailableSuspendedYears();
         $this->recalculate();
     }
 
@@ -134,13 +184,16 @@ class ExamRegistration extends Component
      */
     private function recalculate(): void
     {
-        // Pending Score = (ปีปัจจุบัน - ปีที่มีสิทธิ์สอบ) - ปีงดบำเหน็จ
-        $currentYear = (int) date('Y') + 543; // พ.ศ.
+        $calc = new \App\Services\ScoreCalculator();
+        $currentYear = $calc->getCurrentBuddhistYear();
         $eligibleYear = (int) $this->eligible_year;
-        $suspendedYears = (int) $this->suspended_years;
 
         if ($eligibleYear > 0 && $eligibleYear <= $currentYear) {
-            $this->calculatedPendingScore = max(0, ($currentYear - $eligibleYear) - $suspendedYears);
+            $this->calculatedPendingScore = $calc->calculatePendingScore(
+                $eligibleYear,
+                $this->suspended_years,
+                $currentYear
+            );
         } else {
             $this->calculatedPendingScore = 0;
         }
@@ -155,6 +208,48 @@ class ExamRegistration extends Component
 
         // Total
         $this->calculatedTotalScore = $this->calculatedPendingScore + $this->calculatedSpecialScore;
+    }
+
+    /**
+     * Load position quotas based on selected exam level
+     */
+    public function loadPositionQuotas(): void
+    {
+        if (!$this->activeSession || !$this->exam_level) {
+            $this->positionQuotas = collect();
+            return;
+        }
+
+        // Find the correct session for this exam level
+        $correctSession = ExamSession::registrationOpen()
+            ->where('exam_level', $this->exam_level)
+            ->first();
+            
+        if (!$correctSession) {
+            $this->positionQuotas = collect();
+            return;
+        }
+
+        $this->positionQuotas = PositionQuota::where('exam_session_id', $correctSession->id)
+            ->where('exam_level', $this->exam_level)
+            ->orderBy('position_name')
+            ->get();
+            
+        // Debug: แสดงจำนวน position quotas ที่โหลดได้
+        Log::info('Position quotas loaded', [
+            'exam_session_id' => $correctSession->id,
+            'exam_level' => $this->exam_level,
+            'count' => $this->positionQuotas->count()
+        ]);
+    }
+
+    /**
+     * Updated exam_level property
+     */
+    public function updatedExamLevel(): void
+    {
+        $this->loadPositionQuotas();
+        $this->position = ''; // Reset position when exam level changes
     }
 
     /*
@@ -188,7 +283,6 @@ class ExamRegistration extends Component
         $this->test_location_id = (string) ($previous->test_location_id ?? '');
 
         // Pre-fill from examinee data (latest)
-        $this->position = $examinee->position ?? $this->position;
         $this->branch_id = (string) ($examinee->branch_id ?? $this->branch_id);
         $this->age = (string) ($examinee->age ?? $this->age);
         $this->border_area_id = (string) ($examinee->border_area_id ?? $this->border_area_id);
@@ -211,7 +305,8 @@ class ExamRegistration extends Component
             'branch_id'       => ['required', 'exists:branches,id'],
             'age'             => ['required', 'integer', 'min:18', 'max:60'],
             'eligible_year'   => ['required', 'integer', 'min:2500', 'max:2600'],
-            'suspended_years' => ['required', 'integer', 'min:0', 'max:20'],
+            'suspended_years' => ['nullable', 'array'], // เปลี่ยนเป็น array
+            'suspended_years.*' => ['integer', 'min:2500', 'max:2600'],
             'border_area_id'  => ['nullable', 'exists:border_areas,id'],
             'test_location_id' => ['required', 'exists:test_locations,id'],
             'exam_level'      => ['required', 'in:sergeant_major,master_sergeant'],
@@ -224,8 +319,9 @@ class ExamRegistration extends Component
             'age.max'                  => 'อายุต้องไม่เกิน 60 ปี',
             'eligible_year.required'   => 'กรุณาระบุปีที่มีสิทธิ์สอบ',
             'eligible_year.min'        => 'ปีที่มีสิทธิ์สอบไม่ถูกต้อง',
-            'suspended_years.required' => 'กรุณาระบุปีที่ถูกงดบำเหน็จ',
-            'suspended_years.min'      => 'ปีที่ถูกงดบำเหน็จต้องไม่น้อยกว่า 0',
+            'suspended_years.array'    => 'ข้อมูลปีที่ถูกงดบำเหน็จไม่ถูกต้อง',
+            'suspended_years.*.integer' => 'ปีที่ถูกงดบำเหน็จต้องเป็นตัวเลข',
+            'suspended_years.*.min'    => 'ปีที่ถูกงดบำเหน็จไม่ถูกต้อง',
             'test_location_id.required' => 'กรุณาเลือกสถานที่สอบ',
             'test_location_id.exists'  => 'สถานที่สอบที่เลือกไม่ถูกต้อง',
             'exam_level.required'      => 'กรุณาเลือกระดับที่สอบ',
@@ -239,16 +335,24 @@ class ExamRegistration extends Component
 
         try {
             DB::transaction(function () use ($user, $validated) {
+                $selectedSession = ExamSession::registrationOpen()
+                    ->where('exam_level', $validated['exam_level'])
+                    ->first();
 
-                // 1. Create or Update Examinee profile
+                if (! $selectedSession) {
+                    throw new \Exception('ไม่พบรอบสอบที่เปิดรับสมัครสำหรับระดับที่เลือก');
+                }
+
+                $this->activeSession = $selectedSession;
+
+                // 1. Create or Update Examinee profile (keep current position)
                 $examinee = Examinee::updateOrCreate(
                     ['user_id' => $user->id],
                     [
-                        'position'        => $validated['position'],
                         'branch_id'       => $validated['branch_id'],
                         'age'             => $validated['age'],
                         'eligible_year'   => $validated['eligible_year'],
-                        'suspended_years' => $validated['suspended_years'],
+                        'suspended_years' => $validated['suspended_years'] ?? [], // เก็บเป็น array
                         'border_area_id'  => $validated['border_area_id'] ?: null,
                         'pending_score'   => $this->calculatedPendingScore,
                         'special_score'   => $this->calculatedSpecialScore,
@@ -257,7 +361,7 @@ class ExamRegistration extends Component
 
                 // 2. Check duplicate registration
                 $exists = ExamRegistrationModel::where('examinee_id', $examinee->id)
-                    ->where('exam_session_id', $this->activeSession->id)
+                    ->where('exam_session_id', $selectedSession->id)
                     ->notCancelled()
                     ->exists();
 
@@ -265,11 +369,19 @@ class ExamRegistration extends Component
                     throw new \Exception('คุณได้ลงทะเบียนสอบรอบนี้แล้ว');
                 }
 
-                // 3. Create ExamRegistration
+                // 3. Create ExamRegistration with position quota
+                $positionQuota = PositionQuota::where('exam_session_id', $selectedSession->id)
+                    ->where('exam_level', $validated['exam_level'])
+                    ->where('position_name', $validated['position'])
+                    ->first();
+
                 ExamRegistrationModel::create([
                     'examinee_id'     => $examinee->id,
-                    'exam_session_id' => $this->activeSession->id,
+                    'exam_session_id' => $selectedSession->id,
+                    'exam_level'      => $validated['exam_level'],
                     'test_location_id' => $validated['test_location_id'],
+                    'position_quota_id' => $positionQuota?->id, // Link to position quota
+                    'exam_position'   => $validated['position'],
                     'status'          => ExamRegistrationModel::STATUS_PENDING,
                     'registered_at'   => now(),
                 ]);

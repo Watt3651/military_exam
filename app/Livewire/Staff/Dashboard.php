@@ -18,6 +18,7 @@ use Livewire\Component;
 class Dashboard extends Component
 {
     public string $yearFilter = '';
+    public string $examLevelFilter = '';
     public string $testLocationFilter = '';
     public string $branchFilter = '';
 
@@ -62,6 +63,7 @@ class Dashboard extends Component
     {
         return ExamSession::query()
             ->when($this->yearFilter !== '', fn ($q) => $q->where('year', (int) $this->yearFilter))
+            ->when($this->examLevelFilter !== '', fn ($q) => $q->where('exam_level', $this->examLevelFilter))
             ->where('is_archived', false)
             ->orderByDesc('is_active')
             ->orderByDesc('year')
@@ -170,6 +172,10 @@ class Dashboard extends Component
             ->when($this->yearFilter !== '', function ($q): void {
                 $year = (int) $this->yearFilter;
                 $q->whereHas('examSession', fn ($subQ) => $subQ->where('year', $year));
+            })
+            ->when($this->examLevelFilter !== '', function ($q): void {
+                $level = $this->examLevelFilter;
+                $q->whereHas('examSession', fn ($subQ) => $subQ->where('exam_level', $level));
             })
             ->when($this->testLocationFilter !== '', fn ($q) => $q->where('test_location_id', (int) $this->testLocationFilter))
             ->when($this->branchFilter !== '', fn ($q) => $q->whereHas('examinee', fn ($subQ) => $subQ->where('branch_id', (int) $this->branchFilter)))

@@ -88,7 +88,7 @@ class DefaultUserSeeder extends Seeder
                 'age' => 28,
                 'eligible_year' => 2567,
                 'suspended_years' => 0,
-                'pending_score' => 2.00, // (2569 - 2567) - 0 = 2
+                'pending_score' => 4.00, // (2569 - 2567) - 0 = 2
                 'special_score' => 5.00, // จ.นราธิวาส (BA01)
                 'border_area_id' => 1, // BA01: จ.นราธิวาส
             ],

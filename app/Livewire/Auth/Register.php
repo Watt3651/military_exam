@@ -46,6 +46,17 @@ class Register extends Component
     public string $password_confirmation = '';
 
     /**
+     * ตัวเลือกยศ
+     */
+    public array $rankOptions = [
+        'จ.ต.', 'จ.ท.', 'จ.อ.',
+        'พ.จ.ต.', 'พ.จ.ท.', 'พ.จ.อ.',
+        'ร.ต.', 'ร.ท.', 'ร.อ.',
+        'น.ต.', 'น.ท.', 'น.อ.',
+        'พล.ต.', 'พล.ท.', 'พล.อ.',
+    ];
+
+    /**
      * Validation rules ตาม Section 2.1.2
      *
      * @return array<string, array<int, mixed>>

@@ -23,12 +23,14 @@ return new class extends Migration
         Schema::create('position_quotas', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('exam_session_id')->comment('FK exam_sessions — รอบสอบ');
+            $table->string('exam_level')->default('sergeant_major')->comment('ระดับที่สอบ (sergeant_major, master_sergeant)');
             $table->string('position_name')->comment('ชื่อตำแหน่ง เช่น ผบ.หมู่');
             $table->integer('quota_count')->default(0)->comment('จำนวนอัตราที่เปิด');
             $table->timestamps();
 
             // Indexes
             $table->index('exam_session_id', 'idx_position_quotas_exam_session_id');
+            $table->index('exam_level', 'idx_position_quotas_exam_level');
 
             // Foreign Keys
             $table->foreign('exam_session_id')

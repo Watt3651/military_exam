@@ -13,9 +13,13 @@ use RuntimeException;
  * Section 9.1 / Algorithm from Section 2.5.3
  *
  * รูปแบบหมายเลขสอบ: XYZNN
- * - X   = test_location.code (1 หลัก)
+ * - X   = test_location.code (1 หลัก: 1-9 หรือ 0 สำหรับสถานที่สอบลำดับที่ 10)
  * - Y   = branch.code (1 หลัก)
  * - ZNN = running sequence 3 หลัก (001-999)
+ * 
+ * ตัวอย่าง: 
+ *   - สถานที่สอบ 1-9: 11xxx, 21xxx, ..., 91xxx
+ *   - สถานที่สอบ 10 (ใช้รหัส 0): 01xxx
  */
 class ExamNumberGenerator
 {
@@ -128,10 +132,10 @@ class ExamNumberGenerator
     }
 
     /**
-     * ตรวจว่าเป็นรหัส 1 หลัก ช่วง 1-9 หรือไม่
+     * ตรวจว่าเป็นรหัส 1 หลัก ช่วง 0-9 หรือไม่ (0 ใช้สำหรับสถานที่สอบลำดับที่ 10)
      */
     private function isOneDigitCode(string $code): bool
     {
-        return (bool) preg_match('/^[1-9]$/', $code);
+        return (bool) preg_match('/^[0-9]$/', $code);
     }
 }

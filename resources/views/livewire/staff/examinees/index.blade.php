@@ -62,6 +62,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เหล่า</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานที่สอบ</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หมายเลขสอบ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะการสมัคร</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">คะแนนรวม</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
@@ -79,9 +80,29 @@
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ $examinee->branch?->name ?? '-' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ $latestReg?->testLocation?->name ?? '-' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700 font-mono">{{ $latestReg?->exam_number ?? '-' }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">
+                                    @if($latestReg)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $latestReg->status === \App\Models\ExamRegistration::STATUS_CONFIRMED ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                            {{ $latestReg->status_label }}
+                                        </span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-sm text-right font-semibold text-gray-900">{{ number_format($examinee->total_score, 2) }}</td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="inline-flex items-center gap-2">
+                                        @if($latestReg)
+                                            <button type="button" wire:click="confirmRegistration({{ $latestReg->id }})"
+                                                    wire:loading.attr="disabled"
+                                                    @if($latestReg->status === \App\Models\ExamRegistration::STATUS_CONFIRMED)
+                                                        disabled class="px-3 py-1.5 rounded-md bg-gray-600 text-white text-xs font-medium cursor-not-allowed"
+                                                    @else
+                                                        class="px-3 py-1.5 rounded-md bg-yellow-400 text-black hover:bg-yellow-500 text-xs font-medium"
+                                                    @endif>
+                                                ยืนยัน
+                                            </button>
+                                        @endif
                                         <a href="{{ route('staff.examinees.edit', $examinee->id) }}" wire:navigate
                                            class="px-3 py-1.5 rounded-md bg-amber-100 text-amber-800 hover:bg-amber-200 text-xs font-medium">
                                             แก้ไข

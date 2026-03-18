@@ -239,8 +239,12 @@
                                 <dd class="mt-1 text-sm font-semibold text-gray-900">{{ auth()->user()->full_name }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs font-medium text-gray-500">ตำแหน่ง</dt>
+                                <dt class="text-xs font-medium text-gray-500">ตำแหน่งปัจจุบัน</dt>
                                 <dd class="mt-1 text-sm text-gray-900">{{ $examinee->position ?? '-' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-medium text-gray-500">ตำแหน่งที่สมัครสอบ</dt>
+                                <dd class="mt-1 text-sm font-semibold text-blue-600">{{ $latestRegistration?->exam_position ?? '-' }}</dd>
                             </div>
                             <div>
                                 <dt class="text-xs font-medium text-gray-500">เหล่า</dt>
@@ -256,7 +260,17 @@
                             </div>
                             <div>
                                 <dt class="text-xs font-medium text-gray-500">ปีที่ถูกงดบำเหน็จ</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $examinee->suspended_years ?? 0 }} ปี</dd>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    @php
+                                        $suspendedYears = $examinee->suspended_years ?? [];
+                                        $suspendedCount = is_array($suspendedYears) ? count($suspendedYears) : 0;
+                                    @endphp
+                                    @if($suspendedCount > 0)
+                                        {{ implode(', ', $suspendedYears) }} ({{ $suspendedCount }} ปี)
+                                    @else
+                                        -
+                                    @endif
+                                </dd>
                             </div>
                             <div>
                                 <dt class="text-xs font-medium text-gray-500">พื้นที่ชายแดน</dt>

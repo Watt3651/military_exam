@@ -180,7 +180,7 @@
                                 {{-- ตำแหน่ง --}}
                                 <div class="md:col-span-2">
                                     <label for="position" class="block text-sm font-medium text-gray-700 mb-1">
-                                        ตำแหน่ง <span class="text-red-500">*</span>
+                                        ตำแหน่งปัจจุบัน <span class="text-red-500">*</span>
                                     </label>
                                     <input type="text" id="position"
                                            wire:model="position"
@@ -190,6 +190,62 @@
                                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                     @enderror
                                 </div>
+
+                                {{-- Exam Level (only if registration is open) --}}
+                                @if($canEditRegistrationFields)
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                                        ระดับที่สอบ
+                                    </label>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <label class="relative flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                                               {{ $exam_level === 'sergeant_major' ? 'border-[#2D6A4F] bg-green-50 ring-1 ring-[#2D6A4F]' : 'border-gray-200 hover:border-gray-300' }}">
+                                            <input type="radio" wire:model.live="exam_level" value="sergeant_major"
+                                                   class="text-[#2D6A4F] focus:ring-[#2D6A4F]">
+                                            <div>
+                                                <p class="font-medium text-gray-800">จ่าเอก</p>
+                                                <p class="text-xs text-gray-500">Sergeant Major</p>
+                                            </div>
+                                        </label>
+                                        <label class="relative flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                                               {{ $exam_level === 'master_sergeant' ? 'border-[#2D6A4F] bg-green-50 ring-1 ring-[#2D6A4F]' : 'border-gray-200 hover:border-gray-300' }}">
+                                            <input type="radio" wire:model.live="exam_level" value="master_sergeant"
+                                                   class="text-[#2D6A4F] focus:ring-[#2D6A4F]">
+                                            <div>
+                                                <p class="font-medium text-gray-800">พันจ่าเอก</p>
+                                                <p class="text-xs text-gray-500">Master Sergeant</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {{-- ตำแหน่งที่สอบ (only if registration is open) --}}
+                                <div class="md:col-span-2">
+                                    <label for="exam_position" class="block text-sm font-medium text-gray-700 mb-1">
+                                        ตำแหน่งที่สอบ
+                                    </label>
+                                    @if($exam_level && $positionQuotas->count() > 0)
+                                        <select id="exam_position"
+                                                wire:model="exam_position"
+                                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2D6A4F] focus:ring-[#2D6A4F] text-sm">
+                                            <option value="">-- เลือกตำแหน่งที่สอบ --</option>
+                                            @foreach($positionQuotas as $quota)
+                                                <option value="{{ $quota->position_name }}">
+                                                    {{ $quota->position_name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <input type="text" id="exam_position"
+                                               wire:model="exam_position"
+                                               placeholder="กรุณาเลือกระดับที่สอบก่อน"
+                                               class="w-full rounded-lg border-gray-200 bg-gray-50 text-sm" readonly>
+                                    @endif
+                                    @error('exam_position')
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                @endif
 
                                 {{-- เหล่า --}}
                                 <div>
@@ -240,17 +296,35 @@
                                 </div>
 
                                 {{-- ปีที่ถูกงดบำเหน็จ --}}
-                                <div>
-                                    <label for="suspended_years" class="block text-sm font-medium text-gray-700 mb-1">
-                                        ปีที่ถูกงดบำเหน็จ <span class="text-red-500">*</span>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        ปีที่ถูกงดบำเหน็จ <span class="text-gray-400 text-xs font-normal">(เลือกปีที่ถูกงด)</span>
                                     </label>
-                                    <input type="number" id="suspended_years"
-                                           wire:model.live.debounce.300ms="suspended_years"
-                                           min="0" max="20"
-                                           placeholder="0"
-                                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2D6A4F] focus:ring-[#2D6A4F] text-sm">
-                                    <p class="mt-1 text-xs text-gray-400">ถ้าไม่มี ให้ระบุ 0</p>
+                                    @if(count($availableSuspendedYears) > 0)
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                                            @foreach($availableSuspendedYears as $yearInfo)
+                                                <label class="flex items-center p-2 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors {{ in_array($yearInfo['year'], $suspended_years) ? 'bg-red-50 border-red-300' : 'border-gray-200' }}">
+                                                    <input type="checkbox" 
+                                                           wire:model.live="suspended_years" 
+                                                           value="{{ $yearInfo['year'] }}"
+                                                           class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                                                    <span class="ml-2 text-sm">
+                                                        {{ $yearInfo['year'] }}
+                                                        <span class="text-xs text-gray-500 block">(หัก {{ $yearInfo['points'] }} คะแนน)</span>
+                                                    </span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                        <p class="mt-2 text-xs text-gray-500">
+                                            เลือกปีที่ถูกงดบำเหน็จ ระบบจะหักคะแนนตามเกณฑ์ขั้นบันได
+                                        </p>
+                                    @else
+                                        <p class="text-sm text-gray-400">กรุณาระบุปีที่มีสิทธิ์สอบก่อน</p>
+                                    @endif
                                     @error('suspended_years')
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                    @error('suspended_years.*')
                                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                     @enderror
                                 </div>
