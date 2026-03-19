@@ -119,7 +119,7 @@
                             </div>
 
                             <!-- Navigation Links -->
-                            <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex">
+                            <div class="hidden space-x-4 sm:-my-px sm:ms-10 sm:flex">
                                 @foreach($config['menu'] as $item)
                                     @php
                                         $pattern = $item['pattern'] ?? $item['route'];
