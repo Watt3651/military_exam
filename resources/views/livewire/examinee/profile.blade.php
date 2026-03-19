@@ -89,9 +89,219 @@
             </div>
 
             {{-- ═══════════════════════════════════════════
-                 Editable Form
+                 Read-only Form (Locked After Confirmation)
                  ═══════════════════════════════════════════ --}}
-            <form wire:submit="save">
+            @if ($isLockedAfterConfirmation)
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-red-50 border-b border-red-200 px-6 py-4">
+                        <h3 class="text-lg font-semibold text-red-800 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            ข้อมูลถูกล็อค
+                        </h3>
+                        <p class="text-sm text-red-700 mt-1">การสมัครของคุณได้รับการยืนยันแล้ว — ไม่สามารถแก้ไขข้อมูลใดๆ ได้</p>
+                    </div>
+                    <div class="p-6 space-y-8">
+
+                        {{-- ─── Section 1: ข้อมูลทั่วไป (Read-only) ─── --}}
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                ข้อมูลทั่วไป
+                            </h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {{-- ยศ --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">ยศ</label>
+                                    <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                        <span class="text-sm text-gray-700">{{ $rank }}</span>
+                                    </div>
+                                </div>
+
+                                {{-- ชื่อ --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">ชื่อ</label>
+                                    <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                        <span class="text-sm text-gray-700">{{ $first_name }}</span>
+                                    </div>
+                                </div>
+
+                                {{-- นามสกุล --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">นามสกุล</label>
+                                    <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                        <span class="text-sm text-gray-700">{{ $last_name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="border-gray-200">
+
+                        {{-- ─── Section 2: ข้อมูลผู้เข้าสอบ (Read-only) ─── --}}
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                ข้อมูลผู้เข้าสอบ
+                            </h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {{-- ตำแหน่ง --}}
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">ตำแหน่งปัจจุบัน</label>
+                                    <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                        <span class="text-sm text-gray-700">{{ $position }}</span>
+                                    </div>
+                                </div>
+
+                                {{-- ระดับที่สอบ --}}
+                                @if($exam_level)
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-500 mb-3">ระดับที่สอบ</label>
+                                    <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                        <span class="text-sm text-gray-700">
+                                            {{ $exam_level === 'sergeant_major' ? 'จ่าเอก (Sergeant Major)' : 'พันจ่าเอก (Master Sergeant)' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                @endif
+
+                                {{-- ตำแหน่งที่สอบ --}}
+                                @if($exam_position)
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">ตำแหน่งที่สอบ</label>
+                                    <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                        <span class="text-sm text-gray-700">{{ $exam_position }}</span>
+                                    </div>
+                                </div>
+                                @endif
+
+                                {{-- เหล่า --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">เหล่า</label>
+                                    <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                        <span class="text-sm text-gray-700">{{ $currentBranchName }}</span>
+                                    </div>
+                                </div>
+
+                                {{-- อายุ --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">อายุ (ปี)</label>
+                                    <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                        <span class="text-sm text-gray-700">{{ $age }}</span>
+                                    </div>
+                                </div>
+
+                                {{-- ปีที่มีสิทธิ์สอบ --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">ปีที่มีสิทธิ์สอบ (พ.ศ.)</label>
+                                    <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                        <span class="text-sm text-gray-700">{{ $eligible_year }}</span>
+                                    </div>
+                                </div>
+
+                                {{-- ปีที่ถูกงดบำเหน็จ --}}
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-500 mb-2">ปีที่ถูกงดบำเหน็จ</label>
+                                    @if(count($suspended_years) > 0)
+                                        <div class="flex flex-wrap gap-2">
+                                            @foreach($suspended_years as $year)
+                                                <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">{{ $year }}</span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                            <span class="text-sm text-gray-500">ไม่มีปีที่ถูกงดบำเหน็จ</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="border-gray-200">
+
+                        {{-- ─── Section 3: ข้อมูลการสอบ (Read-only) ─── --}}
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                สถานที่สอบ / พื้นที่ชายแดน
+                            </h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {{-- พื้นที่ชายแดน --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">พื้นที่ราชการชายแดน</label>
+                                    <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                        <span class="text-sm text-gray-700">{{ $currentBorderAreaName ?? 'ไม่ได้ระบุ' }}</span>
+                                    </div>
+                                </div>
+
+                                {{-- สถานที่สอบ --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">สถานที่สอบ</label>
+                                    <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+                                        <span class="text-sm text-gray-700">{{ $currentTestLocationName ?? 'ยังไม่ได้ลงทะเบียน' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="border-gray-200">
+
+                        {{-- ─── Section 4: คะแนน (Read-only) ─── --}}
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                                คะแนน (คำนวณอัตโนมัติ)
+                            </h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {{-- คะแนนค้างบรรจุ --}}
+                                <div class="bg-blue-50 rounded-xl border border-blue-100 p-4 text-center">
+                                    <p class="text-xs font-medium text-blue-600 mb-1">คะแนนค้างบรรจุ</p>
+                                    <p class="text-2xl font-bold text-blue-800">
+                                        {{ number_format($pendingScore, 2) }}
+                                    </p>
+                                </div>
+
+                                {{-- คะแนนพิเศษ --}}
+                                <div class="bg-amber-50 rounded-xl border border-amber-100 p-4 text-center">
+                                    <p class="text-xs font-medium text-amber-600 mb-1">คะแนนพิเศษ</p>
+                                    <p class="text-2xl font-bold text-amber-800">
+                                        {{ number_format($specialScore, 2) }}
+                                    </p>
+                                </div>
+
+                                {{-- คะแนนรวม --}}
+                                <div class="bg-green-50 rounded-xl border border-green-200 p-4 text-center ring-2 ring-green-200">
+                                    <p class="text-xs font-medium text-green-600 mb-1">คะแนนรวม</p>
+                                    <p class="text-2xl font-bold text-green-800">
+                                        {{ number_format($totalScore, 2) }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 border-t border-gray-200 px-6 py-4">
+                        <p class="text-center text-gray-500 text-sm">
+                            หากต้องการแก้ไขข้อมูล กรุณาติดต่อเจ้าหน้าที่ผู้ดูแลระบบ
+                        </p>
+                    </div>
+                </div>
+            @else
+                <form wire:submit="save">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 
                     {{-- Form Header --}}
@@ -349,7 +559,9 @@
                                         <svg class="h-4 w-4 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
                                         </svg>
-                                        <p class="text-xs text-amber-700">ไม่อยู่ในช่วงเปิดรับสมัคร — ไม่สามารถแก้ไขสถานที่สอบและพื้นที่ชายแดนได้</p>
+                                        <p class="text-xs text-amber-700">
+                                            ไม่สามารถแก้ไขข้อมูลการสอบได้ — เนื่องจากการสมัครได้รับการยืนยันแล้ว หรือไม่อยู่ในช่วงเปิดรับสมัคร
+                                        </p>
                                     </div>
                                 </div>
                             @endif
@@ -482,6 +694,7 @@
                     </div>
                 </div>
             </form>
+            @endif
 
         </div>
     </div>

@@ -62,8 +62,8 @@
                     </div>
                 </div>
 
-                <div class="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div class="flex flex-col gap-2">
+                <div class="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
+                    {{-- <div class="flex flex-col gap-2">
                         <p class="text-xs text-gray-500">
                             ปุ่มยืนยันทั้งหมด/ลบทั้งหมดจะทำงานตามรายการที่กรองอยู่ในขณะนี้
                         </p>
@@ -72,13 +72,13 @@
                                    class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
                             ยืนยันเฉพาะรายการที่ยังไม่ยืนยัน (แนะนำ)
                         </label>
-                    </div>
+                    </div> --}}
                     <div class="inline-flex items-center gap-2 self-start md:self-auto">
-                        <button type="button" wire:click="promptBulkAction('confirm')"
+                        {{-- <button type="button" wire:click="promptBulkAction('confirm')"
                                 class="px-3 py-2 rounded-md bg-yellow-400 text-black hover:bg-yellow-500 text-xs font-semibold"
                                 wire:loading.attr="disabled">
                             ยืนยันทั้งหมด
-                        </button>
+                        </button> --}}
                         <button type="button" wire:click="promptBulkAction('delete')"
                                 class="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 text-xs font-semibold"
                                 wire:loading.attr="disabled">

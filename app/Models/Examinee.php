@@ -245,4 +245,17 @@ class Examinee extends Model
         $this->special_score = $this->syncSpecialScore();
         $this->save();
     }
+
+    /**
+     * ตรวจสอบว่าการสมัครล่าสุดถูกยืนยันแล้วหรือไม่ (ใช้สำหรับ lock การแก้ไขของผู้สมัคร)
+     */
+    public function isRegistrationLockedForExaminee(): bool
+    {
+        $latestRegistration = $this->examRegistrations()
+            ->orderByDesc('registered_at')
+            ->orderByDesc('id')
+            ->first();
+
+        return $latestRegistration && $latestRegistration->status === ExamRegistration::STATUS_CONFIRMED;
+    }
 }
