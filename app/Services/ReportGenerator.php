@@ -106,6 +106,7 @@ class ReportGenerator
                 ),
                 'national_id' => (string) ($user?->national_id ?? '-'),
                 'branch' => (string) ($branch?->name ?? '-'),
+                'exam_position' => (string) $registration->exam_position_display, // เพิ่มตำแหน่งที่เลือก
                 'total_score' => number_format($totalScore, 2),
             ];
         });
@@ -211,6 +212,7 @@ class ReportGenerator
                         (string) ($location?->name ?? '-'),
                         (string) ($session?->year ?? '-'),
                         $this->sessionLabel,
+                        (string) $registration->exam_position_display, // เพิ่มตำแหน่งที่เลือก (JSON format)
                         (string) $registration->status,
                         number_format((float) $pendingScore, 2),
                         number_format((float) $specialScore, 2),
@@ -271,6 +273,7 @@ class ReportGenerator
                                 'สถานที่สอบ',
                                 'ปีการสอบ',
                                 'ระดับการสอบ',
+                                'ตำแหน่งที่เลือก',
                                 'สถานะ',
                                 'คะแนนค้างบรรจุ',
                                 'คะแนนเพิ่มพิเศษ',

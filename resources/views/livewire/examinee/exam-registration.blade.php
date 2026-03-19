@@ -44,20 +44,140 @@
                  Already Registered
                  ═══════════════════════════════════════════ --}}
             @elseif ($alreadyRegistered)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-10 text-center">
-                    <svg class="mx-auto h-16 w-16 text-green-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">คุณลงทะเบียนสอบรอบนี้แล้ว</h3>
-                    <p class="text-gray-500 mb-6">ไม่สามารถลงทะเบียนซ้ำได้ กรุณาตรวจสอบสถานะที่หน้า Dashboard</p>
-                    <a href="{{ route('examinee.dashboard') }}" wire:navigate
-                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2D6A4F] text-white text-sm font-medium rounded-lg hover:bg-[#1B4332] transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                @if($editMode)
+                    {{-- Edit Mode --}}
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="bg-orange-50 border-b border-orange-200 px-6 py-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-orange-800">แก้ไขตำแหน่งที่สมัครสอบ</h3>
+                                    <p class="text-orange-600 text-sm mt-1">เปลี่ยนตำแหน่งที่ต้องการสมัครได้ (สถานะ: รอการยืนยัน)</p>
+                                </div>
+                                <button type="button" wire:click="cancelEdit" 
+                                        class="text-orange-600 hover:text-orange-800">
+                                    ยกเลิก
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6">
+                            {{-- แสดงข้อมูลที่ไม่เปลี่ยน --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">ระดับที่สอบ</label>
+                                    <p class="mt-1 text-gray-900">{{ $exam_level === 'sergeant_major' ? 'จ่าเอก' : 'พันจ่าเอก' }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">สถานที่สอบ</label>
+                                    <p class="mt-1 text-gray-900">{{ $testLocations?->where('id', $test_location_id)?->first()?->name ?? '-' }}</p>
+                                </div>
+                            </div>
+                            
+                            {{-- ตำแหน่งที่สอบ (Edit Mode) --}}
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    เลือกตำแหน่งที่สอบใหม่ <span class="text-red-500">*</span>
+                                    <span class="text-gray-400 text-xs font-normal">(เลือกได้ไม่เกิน 3 ตำแหน่ง)</span>
+                                </label>
+                                
+                                <div class="mb-2 text-sm text-gray-600">
+                                    เลือกแล้ว {{ count($positions) }}/3 ตำแหน่ง
+                                </div>
+                                
+                                @if($positionQuotas->count() > 0)
+                                    <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                                        @foreach($positionQuotas as $quota)
+                                            <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors {{ in_array($quota->position_name, $positions) ? 'bg-green-50 border-green-300' : 'border-gray-200' }}">
+                                                <input type="checkbox" 
+                                                       wire:model.live="positions" 
+                                                       value="{{ $quota->position_name }}"
+                                                       class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                                                       {{ count($positions) >= 3 && !in_array($quota->position_name, $positions) ? 'disabled' : '' }}>
+                                                <div class="ml-3 flex-1">
+                                                    <p class="font-medium text-gray-800">{{ $quota->position_name }}</p>
+                                                    <p class="text-xs text-gray-500">สามารถเลือกได้ทุกคน</p>
+                                                </div>
+                                                @if(in_array($quota->position_name, $positions))
+                                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">เลือกแล้ว</span>
+                                                @endif
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            {{-- ปุ่มบันทึก --}}
+                            <div class="flex gap-3">
+                                <button type="button" wire:click="updateRegistration"
+                                        class="px-6 py-2.5 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors">
+                                    บันทึกการแก้ไข
+                                </button>
+                                <button type="button" wire:click="cancelEdit"
+                                        class="px-6 py-2.5 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors">
+                                    ยกเลิก
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    {{-- Display Mode --}}
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-10 text-center">
+                        <svg class="mx-auto h-16 w-16 text-green-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        กลับหน้าหลัก
-                    </a>
-                </div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">คุณลงทะเบียนสอบรอบนี้แล้ว</h3>
+                        
+                        @if($existingRegistration)
+                            <div class="text-left bg-gray-50 rounded-lg p-4 mb-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-600">ระดับที่สอบ:</span>
+                                        <span class="ml-2 font-medium">{{ $existingRegistration->exam_level === 'sergeant_major' ? 'จ่าเอก' : 'พันจ่าเอก' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">สถานที่สอบ:</span>
+                                        <span class="ml-2 font-medium">{{ $existingRegistration->testLocation->name ?? '-' }}</span>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <span class="text-gray-600">ตำแหน่งที่เลือก:</span>
+                                        <span class="ml-2 font-medium">{{ $existingRegistration->exam_position_display }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">สถานะ:</span>
+                                        <span class="ml-2 font-medium">{{ $existingRegistration->status_label }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">วันที่สมัคร:</span>
+                                        <span class="ml-2 font-medium">{{ $existingRegistration->registered_at->format('d/m/Y H:i') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            @if($existingRegistration->status === 'pending')
+                                <div class="space-y-3">
+                                    <p class="text-gray-500 text-sm mb-4">สามารถแก้ไขตำแหน่งที่สมัครได้ ถ้ายังไม่ได้รับการยืนยัน</p>
+                                    <button wire:click="enableEditMode" 
+                                            class="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                        แก้ไขตำแหน่งที่สมัคร
+                                    </button>
+                                </div>
+                            @else
+                                <p class="text-gray-500 text-sm">ไม่สามารถแก้ไขได้ เนื่องจากการสมัครได้รับการยืนยันแล้ว</p>
+                            @endif
+                        @endif
+                        
+                        <a href="{{ route('examinee.dashboard') }}" wire:navigate
+                           class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2D6A4F] text-white text-sm font-medium rounded-lg hover:bg-[#1B4332] transition-colors mt-4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
+                            กลับหน้าหลัก
+                        </a>
+                    </div>
+                @endif
 
             {{-- ═══════════════════════════════════════════
                  Registration Success
@@ -318,28 +438,52 @@
 
                                     {{-- ตำแหน่งที่สอบ --}}
                                     <div class="md:col-span-2">
-                                        <label for="position" class="block text-sm font-medium text-gray-700 mb-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
                                             ตำแหน่งที่สอบ <span class="text-red-500">*</span>
+                                            <span class="text-gray-400 text-xs font-normal">(เลือกได้ไม่เกิน 3 ตำแหน่ง)</span>
                                         </label>
+                                        
+                                        <!-- แสดงจำนวนที่เลือก -->
+                                        <div class="mb-2 text-sm text-gray-600">
+                                            เลือกแล้ว {{ count($positions) }}/3 ตำแหน่ง
+                                        </div>
+                                        
                                         @if($exam_level && $positionQuotas->count() > 0)
-                                            <select id="position"
-                                                    wire:model="position"
-                                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2D6A4F] focus:ring-[#2D6A4F] text-sm">
-                                                <option value="">-- เลือกตำแหน่งที่สอบ --</option>
+                                            <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3">
                                                 @foreach($positionQuotas as $quota)
-                                                    <option value="{{ $quota->position_name }}">
-                                                        {{ $quota->position_name }}
-                                                    </option>
+                                                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors {{ in_array($quota->position_name, $positions) ? 'bg-green-50 border-green-300' : 'border-gray-200' }}">
+                                                        <input type="checkbox" 
+                                                               wire:model.live="positions" 
+                                                               value="{{ $quota->position_name }}"
+                                                               class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                                                               {{ count($positions) >= 3 && !in_array($quota->position_name, $positions) ? 'disabled' : '' }}>
+                                                        <div class="ml-3 flex-1">
+                                                            <p class="font-medium text-gray-800">{{ $quota->position_name }}</p>
+                                                            <p class="text-xs text-gray-500">สามารถเลือกได้ทุกคน</p>
+                                                        </div>
+                                                        @if(in_array($quota->position_name, $positions))
+                                                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">เลือกแล้ว</span>
+                                                        @endif
+                                                    </label>
                                                 @endforeach
-                                            </select>
+                                            </div>
+                                            
+                                            @if(count($positions) >= 3)
+                                                <p class="mt-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                                                    เลือกตำแหน่งครบ 3 ตำแหน่งแล้ว ไม่สามารถเลือกเพิ่มได้
+                                                </p>
+                                            @endif
                                         @else
-                                            <input type="text" id="position"
-                                                   wire:model="position"
-                                                   placeholder="กรุณาเลือกระดับที่สอบก่อน"
-                                                   class="w-full rounded-lg border-gray-200 bg-gray-50 text-sm" readonly>
+                                            <div class="text-sm text-gray-400 bg-gray-50 p-3 rounded-lg border">
+                                                กรุณาเลือกระดับที่สอบก่อน
+                                            </div>
                                         @endif
-                                        @error('position')
-                                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                        
+                                        @error('positions')
+                                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                                        @enderror
+                                        @error('positions.*')
+                                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
                                         @enderror
                                     </div>
 

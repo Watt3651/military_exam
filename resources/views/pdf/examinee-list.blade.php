@@ -30,6 +30,7 @@
                 <th>ยศ ชื่อ-นามสกุล</th>
                 <th>หมายเลขประจำตัว</th>
                 <th>เหล่า</th>
+                <th>ตำแหน่งที่เลือก</th>
                 <th>คะแนนรวม</th>
             </tr>
         </thead>
@@ -40,11 +41,12 @@
                     <td>{{ $row['full_name'] }}</td>
                     <td>{{ $row['national_id'] }}</td>
                     <td>{{ $row['branch'] }}</td>
+                    <td>{{ $row['exam_position'] }}</td>
                     <td class="text-right">{{ $row['total_score'] }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5">ไม่พบข้อมูลผู้เข้าสอบตามเงื่อนไขที่เลือก</td>
+                    <td colspan="6">ไม่พบข้อมูลผู้เข้าสอบตามเงื่อนไขที่เลือก</td>
                 </tr>
             @endforelse
         </tbody>

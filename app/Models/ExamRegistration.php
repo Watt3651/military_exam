@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -69,6 +70,7 @@ class ExamRegistration extends Model
     {
         return [
             'registered_at' => 'datetime',
+            // 'exam_position' => 'array', // ลบออกเพื่อป้องกันการ encode ซ้ำ
         ];
     }
 
@@ -175,17 +177,106 @@ class ExamRegistration extends Model
     }
 
     /**
+     * ตำแหน่งที่สมัครสอบ (แสดงเป็น string สำหรับ display)
+     */
+    public function getExamPositionDisplayAttribute(): string
+    {
+        try {
+            // ตอนนี้ exam_position เป็น string ธรรมดา ไม่ใช่ array
+            $value = $this->attributes['exam_position'] ?? '';
+            
+            // ถ้าเป็น array (กรณีพิเศษ) ให้แปลงเป็น string
+            if (is_array($value)) {
+                return implode(', ', $value);
+            }
+            
+            // ถ้าเป็น JSON string ให้ decode
+            if (is_string($value) && str_contains($value, '[') && str_contains($value, ']')) {
+                $decoded = json_decode($value, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    return implode(', ', $decoded);
+                }
+            }
+            
+            // ถ้าเป็น string ธรรมดาที่มี comma
+            if (is_string($value) && str_contains($value, ',')) {
+                return $value;
+            }
+            
+            // ถ้าเป็น string ธรรมดาเดี่ยวๆ
+            return (string) $value ?: $this->positionQuota?->position_name ?? '-';
+            
+        } catch (\Exception $e) {
+            // กรณี emergency ให้คืนค่าว่าง
+            return '-';
+        }
+    }
+
+    /**
      * ตำแหน่งที่สมัครสอบ (ดึงจาก position_quota ถ้ามี)
      */
-    public function getExamPositionAttribute(): ?string
+    public function getExamPositionAttribute(): mixed
     {
-        // ถ้ามีค่า exam_position ที่เก็บไว้แล้ว ให้ใช้ค่านั้น
-        if ($this->attributes['exam_position'] ?? null) {
-            return $this->attributes['exam_position'];
+        $value = $this->attributes['exam_position'] ?? '';
+        
+        // ถ้าเป็น JSON string ให้ decode เป็น array
+        if (str_contains($value, '[') && str_contains($value, ']')) {
+            $decoded = json_decode($value, true);
+            return (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : $value;
         }
         
-        // ถ้าไม่มี ให้ดึงจาก position_quota relationship
-        return $this->positionQuota?->position_name;
+        // ถ้าเป็น string ที่มี comma ให้แปลงเป็น array
+        if (str_contains($value, ',')) {
+            return array_map('trim', explode(',', $value));
+        }
+        
+        return $value;
+    }
+
+    /**
+     * จำนวนตำแหน่งที่เลือก
+     */
+    public function getPositionCountAttribute(): int
+    {
+        // ตรวจสอบว่าเป็น JSON string หรือ array
+        $positions = $this->exam_position;
+        
+        // ถ้าเป็น string ให้ decode JSON
+        if (is_string($positions)) {
+            $decoded = json_decode($positions, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $positions = $decoded;
+            }
+        }
+        
+        if (is_array($positions)) {
+            return count($positions);
+        }
+        
+        return $positions ? 1 : 0;
+    }
+
+    /**
+     * ตำแหน่งแรกที่เลือก (ลำดับความสำคัญสูงสุด)
+     */
+    public function getFirstPositionAttribute(): ?string
+    {
+        // ตรวจสอบว่าเป็น JSON string หรือ array
+        $positions = $this->exam_position;
+        
+        // ถ้าเป็น string ให้ decode JSON
+        if (is_string($positions)) {
+            $decoded = json_decode($positions, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $positions = $decoded;
+            }
+        }
+        
+        if (is_array($positions) && !empty($positions)) {
+            return $positions[0];
+        }
+        
+        return $positions ?? $this->positionQuota?->position_name ?? null;
     }
 
     /*

@@ -35,6 +35,7 @@ class ExamRegistration extends Component
 {
     // ─── Form Fields (Section 2.2.1) ───
     public string $position = '';
+    public array $positions = []; // เลือกตำแหน่งได้หลายตำแหน่ง (ไม่เกิน 3)
     public string $branch_id = '';
     public string $age = '';
     public string $eligible_year = '';
@@ -54,6 +55,8 @@ class ExamRegistration extends Component
     public bool $registrationSuccess = false;
     public ?string $registrationMessage = null;
     public Collection $availableSessions;
+    public bool $editMode = false;
+    public ?ExamRegistrationModel $existingRegistration = null;
 
     // ─── Dropdown Data ───
     public Collection $branches;
@@ -78,13 +81,20 @@ class ExamRegistration extends Component
         // ─── Check if already registered ───
         $examinee = $user->examinee;
         if ($examinee) {
-            $exists = ExamRegistrationModel::where('examinee_id', $examinee->id)
+            $existing = ExamRegistrationModel::where('examinee_id', $examinee->id)
                 ->whereIn('exam_session_id', $this->availableSessions->pluck('id'))
                 ->notCancelled()
-                ->exists();
+                ->first();
 
-            if ($exists) {
+            if ($existing) {
                 $this->alreadyRegistered = true;
+                $this->existingRegistration = $existing;
+                
+                // Load existing data for display/edit
+                $this->exam_level = $existing->exam_level;
+                $this->test_location_id = (string) $existing->test_location_id;
+                $this->loadPositionQuotas();
+                
                 return;
             }
 
@@ -249,14 +259,67 @@ class ExamRegistration extends Component
     public function updatedExamLevel(): void
     {
         $this->loadPositionQuotas();
-        $this->position = ''; // Reset position when exam level changes
+        $this->positions = []; // Reset positions when exam level changes
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Feature: ใช้ข้อมูลปีที่แล้ว (Section 2.2.2)
+    | Edit Mode Functions
     |--------------------------------------------------------------------------
     */
+
+    public function enableEditMode(): void
+    {
+        $this->editMode = true;
+        
+        // Load existing positions
+        if ($this->existingRegistration && is_array($this->existingRegistration->exam_position)) {
+            $this->positions = $this->existingRegistration->exam_position;
+        }
+    }
+
+    public function cancelEdit(): void
+    {
+        $this->editMode = false;
+        $this->positions = [];
+    }
+
+    public function updateRegistration(): void
+    {
+        if (!$this->existingRegistration) {
+            $this->addError('general', 'ไม่พบข้อมูลการสมัคร');
+            return;
+        }
+
+        // Only allow edit if status is still pending
+        if ($this->existingRegistration->status !== 'pending') {
+            $this->addError('general', 'ไม่สามารถแก้ไขได้ เนื่องจากการสมัครได้รับการยืนยันแล้ว');
+            return;
+        }
+
+        $validated = $this->validate([
+            'positions'       => ['required', 'array', 'min:1', 'max:3'],
+            'positions.*'     => ['required', 'string'],
+        ], [
+            'positions.required'     => 'กรุณาเลือกตำแหน่งที่สอบอย่างน้อย 1 ตำแหน่ง',
+            'positions.min'          => 'กรุณาเลือกตำแหน่งที่สอบอย่างน้อย 1 ตำแหน่ง',
+            'positions.max'          => 'เลือกตำแหน่งที่สอบได้ไม่เกิน 3 ตำแหน่ง',
+            'positions.*.required'   => 'ตำแหน่งที่เลือกไม่ถูกต้อง',
+        ]);
+
+        try {
+            // Update existing registration
+            $this->existingRegistration->update([
+                'exam_position' => json_encode($validated['positions'], JSON_UNESCAPED_UNICODE),
+            ]);
+
+            $this->editMode = false;
+            session()->flash('success', 'แก้ไขตำแหน่งสำเร็จ!');
+
+        } catch (\Exception $e) {
+            $this->addError('general', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    }
 
     public function loadPreviousData(): void
     {
@@ -301,7 +364,8 @@ class ExamRegistration extends Component
     public function register()
     {
         $validated = $this->validate([
-            'position'        => ['required', 'string', 'max:255'],
+            'positions'       => ['required', 'array', 'min:1', 'max:3'],
+            'positions.*'     => ['required', 'string'],
             'branch_id'       => ['required', 'exists:branches,id'],
             'age'             => ['required', 'integer', 'min:18', 'max:60'],
             'eligible_year'   => ['required', 'integer', 'min:2500', 'max:2600'],
@@ -311,7 +375,10 @@ class ExamRegistration extends Component
             'test_location_id' => ['required', 'exists:test_locations,id'],
             'exam_level'      => ['required', 'in:sergeant_major,master_sergeant'],
         ], [
-            'position.required'        => 'กรุณาระบุตำแหน่ง',
+            'positions.required'     => 'กรุณาเลือกตำแหน่งที่สอบอย่างน้อย 1 ตำแหน่ง',
+            'positions.min'          => 'กรุณาเลือกตำแหน่งที่สอบอย่างน้อย 1 ตำแหน่ง',
+            'positions.max'          => 'เลือกตำแหน่งที่สอบได้ไม่เกิน 3 ตำแหน่ง',
+            'positions.*.required'   => 'ตำแหน่งที่เลือกไม่ถูกต้อง',
             'branch_id.required'       => 'กรุณาเลือกเหล่า',
             'branch_id.exists'         => 'เหล่าที่เลือกไม่ถูกต้อง',
             'age.required'             => 'กรุณาระบุอายุ',
@@ -349,6 +416,7 @@ class ExamRegistration extends Component
                 $examinee = Examinee::updateOrCreate(
                     ['user_id' => $user->id],
                     [
+                        'position'        => $user->rank ?? 'ทหาร', // เพิ่มฟิลด์ position
                         'branch_id'       => $validated['branch_id'],
                         'age'             => $validated['age'],
                         'eligible_year'   => $validated['eligible_year'],
@@ -369,26 +437,20 @@ class ExamRegistration extends Component
                     throw new \Exception('คุณได้ลงทะเบียนสอบรอบนี้แล้ว');
                 }
 
-                // 3. Create ExamRegistration with position quota
-                $positionQuota = PositionQuota::where('exam_session_id', $selectedSession->id)
-                    ->where('exam_level', $validated['exam_level'])
-                    ->where('position_name', $validated['position'])
-                    ->first();
-
+                // 3. Create ExamRegistration with JSON positions
                 ExamRegistrationModel::create([
                     'examinee_id'     => $examinee->id,
                     'exam_session_id' => $selectedSession->id,
                     'exam_level'      => $validated['exam_level'],
                     'test_location_id' => $validated['test_location_id'],
-                    'position_quota_id' => $positionQuota?->id, // Link to position quota
-                    'exam_position'   => $validated['position'],
+                    'exam_position'   => json_encode($validated['positions'], JSON_UNESCAPED_UNICODE), // เก็บเป็น JSON array
                     'status'          => ExamRegistrationModel::STATUS_PENDING,
                     'registered_at'   => now(),
                 ]);
             });
 
             $this->registrationSuccess = true;
-            $this->registrationMessage = 'ลงทะเบียนสอบสำเร็จ! กรุณารอการออกหมายเลขสอบ';
+            $this->registrationMessage = 'ลงทะเบียนสอบสำเร็จ! ลงทะเบียน ' . count($validated['positions']) . ' ตำแหน่ง กรุณารอการออกหมายเลขสอบ';
 
         } catch (\Exception $e) {
             $this->addError('general', $e->getMessage());
