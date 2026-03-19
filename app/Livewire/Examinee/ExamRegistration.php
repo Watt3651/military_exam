@@ -53,6 +53,7 @@ class ExamRegistration extends Component
     public bool $alreadyRegistered = false;
     public bool $registrationSuccess = false;
     public ?string $registrationMessage = null;
+    public Collection $availableSessions;
 
     // ─── Dropdown Data ───
     public Collection $branches;
@@ -67,10 +68,10 @@ class ExamRegistration extends Component
     {
         $user = Auth::user();
 
-        // ─── Active Session (injected by middleware) ───
-        $this->activeSession = ExamSession::registrationOpen()->first();
+        // ─── Available Sessions (ทุกรอบที่เปิดรับสมัคร) ───
+        $this->availableSessions = ExamSession::registrationOpen()->get();
 
-        if (!$this->activeSession) {
+        if ($this->availableSessions->isEmpty()) {
             return;
         }
 
@@ -78,7 +79,7 @@ class ExamRegistration extends Component
         $examinee = $user->examinee;
         if ($examinee) {
             $exists = ExamRegistrationModel::where('examinee_id', $examinee->id)
-                ->where('exam_session_id', $this->activeSession->id)
+                ->whereIn('exam_session_id', $this->availableSessions->pluck('id'))
                 ->notCancelled()
                 ->exists();
 
@@ -215,13 +216,13 @@ class ExamRegistration extends Component
      */
     public function loadPositionQuotas(): void
     {
-        if (!$this->activeSession || !$this->exam_level) {
+        if (!$this->exam_level) {
             $this->positionQuotas = collect();
             return;
         }
 
         // Find the correct session for this exam level
-        $correctSession = ExamSession::registrationOpen()
+        $correctSession = $this->availableSessions
             ->where('exam_level', $this->exam_level)
             ->first();
             
@@ -231,7 +232,6 @@ class ExamRegistration extends Component
         }
 
         $this->positionQuotas = PositionQuota::where('exam_session_id', $correctSession->id)
-            ->where('exam_level', $this->exam_level)
             ->orderBy('position_name')
             ->get();
             
@@ -335,7 +335,7 @@ class ExamRegistration extends Component
 
         try {
             DB::transaction(function () use ($user, $validated) {
-                $selectedSession = ExamSession::registrationOpen()
+                $selectedSession = $this->availableSessions
                     ->where('exam_level', $validated['exam_level'])
                     ->first();
 

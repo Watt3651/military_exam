@@ -24,7 +24,7 @@
             {{-- ═══════════════════════════════════════════
                  No Active Session
                  ═══════════════════════════════════════════ --}}
-            @if (!$activeSession)
+            @if ($availableSessions->isEmpty())
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-10 text-center">
                     <svg class="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -106,23 +106,42 @@
                  ═══════════════════════════════════════════ --}}
             @else
                 {{-- Session Info Banner --}}
-                <div class="bg-gradient-to-r from-[#1B4332] to-[#2D6A4F] rounded-xl shadow-lg p-6 text-white">
-                    <div class="flex items-center justify-between flex-wrap gap-4">
-                        <div>
-                            <h3 class="text-lg font-bold">{{ $activeSession->display_name }}</h3>
-                            <p class="text-green-100 text-sm mt-1">
-                                ช่วงรับสมัคร:
-                                {{ $activeSession->registration_start->format('d/m/Y') }}
-                                -
-                                {{ $activeSession->registration_end->format('d/m/Y') }}
-                            </p>
+                @if($exam_level)
+                    @php
+                        $selectedSession = $availableSessions->where('exam_level', $exam_level)->first();
+                    @endphp
+                    @if($selectedSession)
+                        <div class="bg-gradient-to-r from-[#1B4332] to-[#2D6A4F] rounded-xl shadow-lg p-6 text-white">
+                            <div class="flex items-center justify-between flex-wrap gap-4">
+                                <div>
+                                    <h3 class="text-lg font-bold">{{ $selectedSession->display_name }}</h3>
+                                    <p class="text-green-100 text-sm mt-1">
+                                        ช่วงรับสมัคร:
+                                        {{ $selectedSession->registration_start->format('d/m/Y') }}
+                                        -
+                                        {{ $selectedSession->registration_end->format('d/m/Y') }}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-green-100 text-xs">วันสอบ</p>
+                                    <p class="text-xl font-bold">{{ $selectedSession->exam_date->format('d/m/Y') }}</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-green-100 text-xs">วันสอบ</p>
-                            <p class="text-xl font-bold">{{ $activeSession->exam_date->format('d/m/Y') }}</p>
+                    @endif
+                @else
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                        <div class="flex items-center gap-3">
+                            <svg class="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <h3 class="text-lg font-semibold text-blue-800">กรุณาเลือกระดับการสอบ</h3>
+                                <p class="text-blue-600 text-sm mt-1">เลือกระดับที่ต้องการสมัครเพื่อดูข้อมูลรอบสอบ</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endif
 
                 {{-- General Error --}}
                 @error('general')
@@ -273,25 +292,25 @@
                                             ระดับที่สอบ <span class="text-red-500">*</span>
                                         </label>
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            <label class="relative flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
-                                                   {{ $exam_level === 'sergeant_major' ? 'border-[#2D6A4F] bg-green-50 ring-1 ring-[#2D6A4F]' : 'border-gray-200 hover:border-gray-300' }}">
-                                                <input type="radio" wire:model.live="exam_level" value="sergeant_major"
-                                                       class="text-[#2D6A4F] focus:ring-[#2D6A4F]">
-                                                <div>
-                                                    <p class="font-medium text-gray-800">จ่าเอก</p>
-                                                    <p class="text-xs text-gray-500">Sergeant Major</p>
-                                                </div>
-                                            </label>
-                                            <label class="relative flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
-                                                   {{ $exam_level === 'master_sergeant' ? 'border-[#2D6A4F] bg-green-50 ring-1 ring-[#2D6A4F]' : 'border-gray-200 hover:border-gray-300' }}">
-                                                <input type="radio" wire:model.live="exam_level" value="master_sergeant"
-                                                       class="text-[#2D6A4F] focus:ring-[#2D6A4F]">
-                                                <div>
-                                                    <p class="font-medium text-gray-800">พันจ่าเอก</p>
-                                                    <p class="text-xs text-gray-500">Master Sergeant</p>
-                                                </div>
-                                            </label>
+                                            @foreach(['sergeant_major' => 'จ่าเอก', 'master_sergeant' => 'พันจ่าเอก'] as $level => $label)
+                                                @if($availableSessions->where('exam_level', $level)->isNotEmpty())
+                                                    <label class="relative flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                                                           {{ $exam_level === $level ? 'border-[#2D6A4F] bg-green-50 ring-1 ring-[#2D6A4F]' : 'border-gray-200 hover:border-gray-300' }}">
+                                                        <input type="radio" wire:model.live="exam_level" value="{{ $level }}"
+                                                               class="text-[#2D6A4F] focus:ring-[#2D6A4F]">
+                                                        <div>
+                                                            <p class="font-medium text-gray-800">{{ $label }}</p>
+                                                            <p class="text-xs text-gray-500">{{ $level === 'sergeant_major' ? 'Sergeant Major' : 'Master Sergeant' }}</p>
+                                                        </div>
+                                                    </label>
+                                                @endif
+                                            @endforeach
                                         </div>
+                                        @if($availableSessions->isEmpty())
+                                            <p class="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
+                                                ไม่มีรอบสอบที่เปิดรับสมัครในขณะนี้
+                                            </p>
+                                        @endif
                                         @error('exam_level')
                                             <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
                                         @enderror
