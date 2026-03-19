@@ -33,8 +33,8 @@ class CheckRegistrationPeriod
     {
         // ค้นหารอบสอบที่เปิดรับลงทะเบียนอยู่
         $activeSession = ExamSession::where('is_active', true)
-            ->whereDate('registration_start', '<=', now())
-            ->whereDate('registration_end', '>=', now())
+            ->where('registration_start', '<=', now())
+            ->where('registration_end', '>=', now())
             ->first();
 
         if (!$activeSession) {
