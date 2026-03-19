@@ -71,6 +71,7 @@ class Profile extends Component
     public bool $hasRegistration = false;
     public bool $isRegistrationOpen = false;
     public bool $canEditRegistrationFields = false;
+    public bool $isLockedAfterConfirmation = false;
 
     // ─── Dropdown Data ───
     public Collection $branches;
@@ -169,8 +170,11 @@ class Profile extends Component
             $this->generateAvailableSuspendedYears();
         }
 
-        // ── สถานที่สอบ/พื้นที่ชายแดน แก้ได้เฉพาะก่อนปิดรับสมัคร ──
-        $this->canEditRegistrationFields = $this->isRegistrationOpen;
+        // ── สถานที่สอบ/พื้นที่ชายแดน แก้ได้เฉพาะก่อนปิดรับสมัคร และยังไม่ถูกยืนยัน ──
+        $this->canEditRegistrationFields = $this->isRegistrationOpen && !$examinee?->isRegistrationLockedForExaminee();
+        
+        // ── หลังยืนยันแล้วจะ lock การแก้ไขทั้งหมด ──
+        $this->isLockedAfterConfirmation = $examinee?->isRegistrationLockedForExaminee() ?? false;
     }
 
     /**
