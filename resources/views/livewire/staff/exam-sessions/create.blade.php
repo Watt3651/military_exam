@@ -107,6 +107,19 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                                    @if (!$session->is_archived)
+                                        <button 
+                                            wire:click="toggleSessionStatus({{ $session->id }})"
+                                            wire:loading.attr="disabled"
+                                            class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg
+                                                {{ $session->is_active 
+                                                    ? 'bg-red-600 text-white hover:bg-red-700' 
+                                                    : 'bg-green-600 text-white hover:bg-green-700' }}
+                                                transition-colors mr-2"
+                                        >
+                                            {{ $session->is_active ? 'ปิด' : 'เปิด' }}
+                                        </button>
+                                    @endif
                                     <a href="{{ route('staff.exam-numbers.generate', ['exam_session_id' => $session->id]) }}"
                                        class="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs font-medium">
                                         เรียงเลขสอบ
@@ -124,3 +137,11 @@
         </div>
     </div>
 </div>
+
+{{-- Notification --}}
+<script>
+    @this.on('session-status-updated', (message) => {
+        alert(message);
+        window.location.reload();
+    });
+</script>
