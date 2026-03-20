@@ -82,7 +82,7 @@ new class extends Component
         </p>
     </header>
 
-    <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
+    <form wire:submit="updateProfileInformation" class="mt-6 space-y-6 text-black">
         <!-- National ID (Read-only) -->
         <div>
             <x-input-label for="national_id" value="หมายเลขประจำตัว 13 หลัก" />
