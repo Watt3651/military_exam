@@ -92,6 +92,7 @@ class Examinee extends Model
             ->logOnly([
                 'position',
                 'branch_id',
+                'unit_id',
                 'age',
                 'eligible_year',
                 'suspended_years',
@@ -125,6 +126,15 @@ class Examinee extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * สังกัดทหาร
+     * examinees.unit_id → units.id
+     */
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
     }
 
     /**

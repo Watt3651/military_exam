@@ -50,7 +50,7 @@ new class extends Component
         </p>
     </header>
 
-    <form wire:submit="updatePassword" class="mt-6 space-y-6">
+    <form wire:submit="updatePassword" class="mt-6 space-y-6 text-black">
         <div>
             <x-input-label for="update_password_current_password" value="รหัสผ่านปัจจุบัน" />
             <x-text-input 

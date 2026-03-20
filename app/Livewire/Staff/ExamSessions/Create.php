@@ -44,6 +44,28 @@ class Create extends Component
             ->get();
     }
 
+    // ─── Session Management Functions ───
+
+    public function toggleSessionStatus(int $sessionId): void
+    {
+        $session = ExamSession::find($sessionId);
+        if (!$session) {
+            return;
+        }
+
+        // Toggle is_active status
+        $session->update([
+            'is_active' => !$session->is_active
+        ]);
+
+        // Refresh sessions
+        $this->loadSessions();
+        
+        // Show notification
+        $status = $session->is_active ? 'เปิด' : 'ปิด';
+        $this->dispatch('session-status-updated', "สถานะรอบสอบ {$session->year} {$session->exam_level_label} ถูก{$status}แล้ว");
+    }
+
     /**
      * @return array<string, mixed>
      */

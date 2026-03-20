@@ -153,6 +153,14 @@ class User extends Authenticatable
         return "{$this->first_name} {$this->last_name}";
     }
 
+    /**
+     * ตรวจสอบว่าเป็น admin หรือไม่
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin' || $this->national_id === 'admin';
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Relationships

@@ -29,15 +29,8 @@
                     <svg class="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">ไม่อยู่ในช่วงเปิดรับสมัคร</h3>
-                    <p class="text-gray-500 mb-6">ขณะนี้ไม่มีรอบสอบที่เปิดรับสมัคร กรุณารอประกาศจากหน่วยงาน</p>
-                    <a href="{{ route('examinee.dashboard') }}" wire:navigate
-                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2D6A4F] text-white text-sm font-medium rounded-lg hover:bg-[#1B4332] transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                        </svg>
-                        กลับหน้าหลัก
-                    </a>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">ยังไม่เปิดรับสมัคร</h3>
+                    <p class="text-gray-600">ขณะนี้ยังไม่มีรอบสอบที่เปิดรับสมัคร</p>
                 </div>
 
             {{-- ═══════════════════════════════════════════
