@@ -207,7 +207,6 @@ class Profile extends Component
         }
 
         $this->positionQuotas = PositionQuota::where('exam_session_id', $activeSession->id)
-            ->where('exam_level', $this->exam_level)
             ->orderBy('position_name')
             ->get();
     }
