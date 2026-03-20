@@ -4,15 +4,18 @@ namespace App\Livewire\Staff\Examinees;
 
 use App\Models\BorderArea;
 use App\Models\Branch;
+use App\Models\DataReviewLog;
 use App\Models\Examinee;
 use App\Models\ExamineeEditLog;
 use App\Models\ExamRegistration;
 use App\Models\TestLocation;
+use App\Notifications\DataReviewNotification;
 use App\Services\ScoreCalculator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Layout;
@@ -53,6 +56,11 @@ class Edit extends Component
     public string $reset_password_confirmation = '';
     public bool $auto_generate_password = false;
     public ?string $generated_password = null;
+
+    // ─── Notification Properties ───
+    public bool $showNotificationModal = false;
+    public string $notificationMessage = '';
+    public bool $alertSuccess = false;
 
     public function mount(int $id): void
     {
@@ -319,6 +327,95 @@ class Edit extends Component
             ->latestFirst()
             ->limit(30)
             ->get();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notification Methods
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * แสดง modal ส่งแจ้งเตือน
+     */
+    public function openNotificationModal(): void
+    {
+        // Simple debug - set property directly
+        $this->showNotificationModal = true;
+        $this->notificationMessage = 'ทดสอบการส่งแจ้งเตือน';
+        
+        // Force re-render
+        $this->dispatch('refresh-component');
+    }
+
+    /**
+     * ปิด modal ส่งแจ้งเตือน
+     */
+    public function closeNotificationModal(): void
+    {
+        $this->showNotificationModal = false;
+        $this->notificationMessage = '';
+    }
+
+    /**
+     * ส่งแจ้งเตือนให้ผู้สมัคร
+     */
+    public function sendNotification(): void
+    {
+        $this->validate([
+            'notificationMessage' => ['required', 'string', 'max:500'],
+        ], [
+            'notificationMessage.required' => 'กรุณาระบุข้อความแจ้งเตือน',
+            'notificationMessage.max' => 'ข้อความแจ้งเตือนต้องไม่เกิน 500 ตัวอักษร',
+        ]);
+
+        /** @var \App\Models\User $staff */
+        $staff = Auth::user();
+
+        try {
+            DB::transaction(function () use ($staff) {
+                // Debug: ตรวจสอบข้อมูล
+                \Log::info('Sending notification', [
+                    'examinee_id' => $this->examinee->id,
+                    'examinee_user_id' => $this->examinee->user_id,
+                    'staff_id' => $staff->id,
+                    'message' => $this->notificationMessage,
+                ]);
+
+                // 1. สร้าง notification
+                $this->examinee->user->notify(
+                    new DataReviewNotification($this->notificationMessage, $staff)
+                );
+
+                \Log::info('Notification sent successfully');
+
+                // 2. บันทึก log
+                DataReviewLog::create([
+                    'examinee_id' => $this->examinee->id,
+                    'staff_id' => $staff->id,
+                    'message' => $this->notificationMessage,
+                    'status' => 'pending',
+                ]);
+
+                \Log::info('Data review log created');
+            });
+
+            $this->closeNotificationModal();
+            
+            // Flash message สำหรับแสดงในหน้า view
+            session()->flash('notification_sent', 'ส่งแจ้งเตือนให้ผู้สมัครเรียบร้อยแล้ว');
+            
+            // Set alert property สำหรับ Livewire
+            $this->alertSuccess = true;
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send notification', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            $this->dispatch('swal:error', 'เกิดข้อผิดพลาด', 'ไม่สามารถส่งแจ้งเตือนได้ กรุณาลองใหม่อีกครั้ง');
+        }
     }
 
     public function render()

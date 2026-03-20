@@ -6,6 +6,63 @@
             </div>
         @endif
 
+        @if (session('notification_sent'))
+            <div class="rounded-lg bg-blue-50 border border-blue-200 p-4 text-blue-700 text-sm">
+                ✅ {{ session('notification_sent') }}
+            </div>
+        @endif
+
+        <!-- Livewire Alert -->
+        @if ($this->alertSuccess ?? false)
+            <div class="rounded-lg bg-green-50 border border-green-200 p-4 text-green-700 text-sm">
+                ✅ ส่งแจ้งเตือนสำเร็จแล้ว
+            </div>
+        @endif
+
+        {{-- Simple Test Button --}}
+        <div class="fixed bottom-4 left-4 bg-purple-500 text-white p-2 rounded text-xs z-50">
+            Debug: <button wire:click="$set('alertSuccess', true)" class="bg-white text-purple-500 px-2 py-1 rounded text-xs">Test Alert</button>
+            <button wire:click="openNotificationModal" class="bg-white text-purple-500 px-2 py-1 rounded text-xs ml-2">Test Modal</button>
+        </div>
+
+        {{-- Notification Modal --}}
+        @if ($showNotificationModal)
+            <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                    <div class="mt-3 text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+                            <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">แจ้งเตือนตรวจสอบข้อมูล</h3>
+                        <div class="mt-2 px-7 py-3">
+                            <p class="text-sm text-gray-500">
+                                ส่งแจ้งเตือนให้ผู้สมัครตรวจสอบและแก้ไขข้อมูล
+                            </p>
+                            <textarea wire:model="notificationMessage" 
+                                      class="mt-3 w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
+                                      rows="4"
+                                      placeholder="กรุณาระบุข้อความแจ้งเตือน..."></textarea>
+                            @error('notificationMessage')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="items-center px-4 py-3">
+                            <button wire:click="sendNotification"
+                                    class="px-4 py-2 bg-yellow-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                                ส่งแจ้งเตือน
+                            </button>
+                            <button wire:click="closeNotificationModal"
+                                    class="mt-3 px-4 py-2 bg-white text-gray-700 text-base font-medium rounded-md w-full shadow-sm border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                ยกเลิก
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6 border-b border-gray-200">
                 <h2 class="text-xl font-semibold text-gray-900">แก้ไขข้อมูลผู้เข้าสอบ</h2>
@@ -135,10 +192,6 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
-                    <a href="{{ route('staff.examinees.index') }}" wire:navigate
-                       class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50">
-                        กลับหน้ารายการ
-                    </a>
                     <button type="submit"
                             class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-green-100"
                             wire:loading.attr="disabled">
@@ -146,6 +199,22 @@
                     </button>
                 </div>
             </form>
+
+            <div class="p-6 border-t border-gray-200">
+                <div class="flex items-center justify-end gap-3">
+                    <button type="button" wire:click="openNotificationModal"
+                            class="inline-flex items-center px-4 py-2 bg-yellow-500 border border-yellow-600 rounded-md text-xs font-semibold text-white uppercase tracking-widest hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        แจ้งเตือนตรวจสอบข้อมูล
+                    </button>
+                    <a href="{{ route('staff.examinees.index') }}" wire:navigate
+                       class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-gray-50">
+                        กลับหน้ารายการ
+                    </a>
+                </div>
+            </div>
         </div>
 
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -245,4 +314,60 @@
             </form>
         </div>
     </div>
+
+    {{-- Notification Modal --}}
+    @if ($showNotificationModal)
+        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" wire:click="closeNotificationModal"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    แจ้งเตือนตรวจสอบข้อมูล
+                                </h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">
+                                        ส่งแจ้งเตือนให้ผู้สมัครตรวจสอบและแก้ไขข้อมูลให้ถูกต้อง
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white px-4 py-3 sm:px-6 sm:flex sm:flex-row">
+                        <div class="w-full">
+                            <label for="notificationMessage" class="block text-sm font-medium text-gray-700 mb-2">
+                                ข้อความแจ้งเตือน
+                            </label>
+                            <textarea id="notificationMessage" wire:model="notificationMessage" rows="3"
+                                      class="w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
+                                      placeholder="ระบุข้อความแจ้งเตือน..."></textarea>
+                            @error('notificationMessage')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="button" wire:click="sendNotification"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-yellow-600 text-base font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            ส่งแจ้งเตือน
+                        </button>
+                        <button type="button" wire:click="closeNotificationModal"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            ยกเลิก
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

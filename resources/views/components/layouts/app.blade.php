@@ -121,7 +121,7 @@
                             </div>
 
                             <!-- Navigation Links -->
-                            <div class="hidden space-x-4 sm:-my-px sm:ms-10 sm:flex">
+                            <div class="hidden space-x-2 sm:-my-px sm:ms-10 sm:flex">
                                 @foreach($config['menu'] as $item)
                                     @php
                                         $pattern = $item['pattern'] ?? $item['route'];
@@ -255,6 +255,11 @@
         <main>
             {{ $slot }}
         </main>
+        
+        {{-- Notification Alert for Examinees --}}
+        @if(strtolower($role) === 'examinee')
+            <livewire:notification-alert />
+        @endif
     </div>
 </body>
 

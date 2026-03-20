@@ -80,6 +80,21 @@ Route::middleware(['auth', 'role:staff'])
 require __DIR__.'/staff.php';
 
 // ─────────────────────────────────────────────────────────
+// Test Routes (temporary for debugging)
+// ─────────────────────────────────────────────────────────
+Route::get('/test-notification', [App\Http\Controllers\TestNotificationController::class, 'test']);
+Route::get('/check-notification', [App\Http\Controllers\TestNotificationController::class, 'check']);
+Route::get('/force-login-examinee', function() {
+    // Force login as examinee for testing
+    $user = \App\Models\User::where('role', 'examinee')->first();
+    if ($user) {
+        \Auth::login($user);
+        return redirect('/examinee/dashboard');
+    }
+    return 'No examinee user found';
+});
+
+// ─────────────────────────────────────────────────────────
 // Commander Routes (auth + role:commander)
 // ─────────────────────────────────────────────────────────
 require __DIR__.'/commander.php';
