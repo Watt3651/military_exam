@@ -51,7 +51,7 @@ class Profile extends Component
     // ─── Registration Fields ───
     public string $test_location_id = '';
     public string $exam_level = '';
-    public string $exam_position = '';
+    public array $positions = []; // เปลี่ยนเป็น array สำหรับเลือกหลายตำแหน่ง
 
     // ─── Read-only Display ───
     public string $national_id = '';
@@ -158,7 +158,16 @@ class Profile extends Component
                 $this->test_location_id = (string) ($latestReg->test_location_id ?? '');
                 $this->currentTestLocationName = $latestReg->testLocation?->name;
                 $this->registrationStatus = $latestReg->status_label;
-                $this->exam_position = $latestReg->exam_position ?? '';
+                
+                // Load positions from existing registration
+                if ($latestReg->exam_position) {
+                    if (is_string($latestReg->exam_position)) {
+                        $decoded = json_decode($latestReg->exam_position, true);
+                        $this->positions = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : [$latestReg->exam_position];
+                    } elseif (is_array($latestReg->exam_position)) {
+                        $this->positions = $latestReg->exam_position;
+                    }
+                }
 
                 $this->exam_level = (string) ($latestReg->exam_level ?? $latestReg->positionQuota?->exam_level ?? '');
                 if ($this->exam_level !== '') {
@@ -198,7 +207,6 @@ class Profile extends Component
         }
 
         $this->positionQuotas = PositionQuota::where('exam_session_id', $activeSession->id)
-            ->where('exam_level', $this->exam_level)
             ->orderBy('position_name')
             ->get();
     }
@@ -209,7 +217,7 @@ class Profile extends Component
     public function updatedExamLevel(): void
     {
         $this->loadPositionQuotas();
-        $this->exam_position = ''; // Reset position when exam level changes
+        $this->positions = []; // Reset positions when exam level changes
     }
 
     /**
@@ -323,7 +331,8 @@ class Profile extends Component
             $rules['border_area_id'] = ['nullable', 'exists:border_areas,id'];
             $rules['test_location_id'] = ['nullable', 'exists:test_locations,id'];
             $rules['exam_level'] = ['nullable', 'in:sergeant_major,master_sergeant'];
-            $rules['exam_position'] = ['nullable', 'string', 'max:255'];
+            $rules['positions'] = ['nullable', 'array', 'max:3']; // เปลี่ยน validation
+            $rules['positions.*'] = ['nullable', 'string', 'max:255'];
         }
 
         $validated = $this->validate($rules, [
@@ -347,16 +356,24 @@ class Profile extends Component
 
         try {
             DB::transaction(function () use ($user, $validated) {
-                $calc = new ScoreCalculator();
-
-                // 1. Update User (ยศ, ชื่อ, นามสกุล)
+                // 1. Update User
                 $user->update([
-                    'rank'       => $validated['rank'],
+                    'rank' => $validated['rank'],
                     'first_name' => $validated['first_name'],
-                    'last_name'  => $validated['last_name'],
+                    'last_name' => $validated['last_name'],
                 ]);
 
-                // 2. Calculate scores
+                // 2. Get or Create Examinee
+                $examinee = $user->examinee ?? $user->examinee()->create([
+                    'user_id' => $user->id,
+                    'position' => $validated['rank'] ?? 'ทหาร', // เพิ่มฟิลด์ position
+                    'branch_id' => $validated['branch_id'] ?? null, // เพิ่มฟิลด์ branch_id
+                    'age' => $validated['age'] ?? null, // เพิ่มฟิลด์อื่นๆ ที่จำเป็น
+                    'eligible_year' => $validated['eligible_year'] ?? null,
+                ]);
+
+                // 3. Calculate scores
+                $calc = new ScoreCalculator();
                 $borderAreaId = ! empty($validated['border_area_id'])
                     ? (int) $validated['border_area_id']
                     : ($this->hasExamineeProfile ? Auth::user()->examinee?->border_area_id : null);
@@ -367,7 +384,7 @@ class Profile extends Component
                     $borderAreaId,
                 );
 
-                // 3. Update or Create Examinee
+                // 4. Update or Create Examinee
                 $examineeData = [
                     'position'        => $validated['position'],
                     'branch_id'       => $validated['branch_id'],
@@ -385,51 +402,6 @@ class Profile extends Component
                         : null;
                 }
 
-                $examinee = Examinee::updateOrCreate(
-                    ['user_id' => $user->id],
-                    $examineeData,
-                );
-
-                // 4. Update test_location and exam_position on latest registration (if registration is open)
-                if ($this->canEditRegistrationFields && $this->hasRegistration) {
-                    $latestReg = ExamRegistration::where('examinee_id', $examinee->id)
-                        ->notCancelled()
-                        ->orderByDesc('registered_at')
-                        ->first();
-
-                    if ($latestReg) {
-                        $updateData = [];
-
-                        if (! empty($validated['test_location_id'])) {
-                            $updateData['test_location_id'] = $validated['test_location_id'];
-                        }
-                        
-                        // Update position quota if provided
-                        if (!empty($validated['exam_position'])) {
-                            $activeSession = ExamSession::registrationOpen()
-                                ->where('exam_level', $this->exam_level)
-                                ->first();
-                            if ($activeSession) {
-                                $positionQuota = PositionQuota::where('exam_session_id', $activeSession->id)
-                                    ->where('exam_level', $this->exam_level)
-                                    ->where('position_name', $validated['exam_position'])
-                                    ->first();
-                                
-                                if ($positionQuota) {
-                                    $updateData['position_quota_id'] = $positionQuota->id;
-                                    $updateData['exam_position'] = $positionQuota->position_name;
-                                    $updateData['exam_level'] = $this->exam_level;
-                                }
-                            }
-                        }
-                        
-                        if (! empty($updateData)) {
-                            $latestReg->update($updateData);
-                        }
-                    }
-                }
-
-                // 5. Refresh local state
                 $this->pendingScore = $scores['pending_score'];
                 $this->specialScore = $scores['special_score'];
                 $this->totalScore = $scores['total_score'];
@@ -442,6 +414,32 @@ class Profile extends Component
                     if (! empty($validated['test_location_id'])) {
                         $location = $this->testLocations->firstWhere('id', (int) $validated['test_location_id']);
                         $this->currentTestLocationName = $location?->name;
+                    }
+
+                    // Update registration positions
+                    $latestReg = ExamRegistration::where('examinee_id', $examinee->id)
+                        ->notCancelled()
+                        ->orderByDesc('registered_at')
+                        ->first();
+
+                    if ($latestReg && $latestReg->status === ExamRegistration::STATUS_PENDING) {
+                        $updateData = [];
+                        
+                        // Update test location if provided
+                        if (!empty($validated['test_location_id'])) {
+                            $updateData['test_location_id'] = (int) $validated['test_location_id'];
+                        }
+                        
+                        // Update positions if provided
+                        if (!empty($validated['positions']) && is_array($validated['positions'])) {
+                            $updateData['exam_position'] = json_encode($validated['positions'], JSON_UNESCAPED_UNICODE);
+                            $updateData['position_quota_id'] = null; // Clear old position_quota_id
+                            $updateData['exam_level'] = $this->exam_level;
+                        }
+                        
+                        if (!empty($updateData)) {
+                            $latestReg->update($updateData);
+                        }
                     }
                 }
 

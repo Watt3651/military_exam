@@ -173,11 +173,11 @@
                                 @endif
 
                                 {{-- ตำแหน่งที่สอบ --}}
-                                @if($exam_position)
+                                @if($positions && count($positions) > 0)
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-medium text-gray-500 mb-1">ตำแหน่งที่สอบ</label>
                                     <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
-                                        <span class="text-sm text-gray-700">{{ $exam_position }}</span>
+                                        <span class="text-sm text-gray-700">{{ implode(', ', $positions) }}</span>
                                     </div>
                                 </div>
                                 @endif
@@ -431,27 +431,50 @@
 
                                 {{-- ตำแหน่งที่สอบ (only if registration is open) --}}
                                 <div class="md:col-span-2">
-                                    <label for="exam_position" class="block text-sm font-medium text-gray-700 mb-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
                                         ตำแหน่งที่สอบ
+                                        <span class="text-gray-400 text-xs font-normal">(เลือกได้ไม่เกิน 3 ตำแหน่ง)</span>
                                     </label>
+                                    
+                                    <!-- แสดงจำนวนที่เลือก -->
+                                    <div class="mb-2 text-sm text-gray-600">
+                                        เลือกแล้ว {{ count($positions) }}/3 ตำแหน่ง
+                                    </div>
+                                    
                                     @if($exam_level && $positionQuotas->count() > 0)
-                                        <select id="exam_position"
-                                                wire:model="exam_position"
-                                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2D6A4F] focus:ring-[#2D6A4F] text-sm">
-                                            <option value="">-- เลือกตำแหน่งที่สอบ --</option>
+                                        <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3">
                                             @foreach($positionQuotas as $quota)
-                                                <option value="{{ $quota->position_name }}">
-                                                    {{ $quota->position_name }}
-                                                </option>
+                                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors {{ in_array($quota->position_name, $positions) ? 'bg-green-50 border-green-300' : 'border-gray-200' }}">
+                                                    <input type="checkbox" 
+                                                           wire:model.live="positions" 
+                                                           value="{{ $quota->position_name }}"
+                                                           class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                                                           {{ count($positions) >= 3 && !in_array($quota->position_name, $positions) ? 'disabled' : '' }}>
+                                                    <div class="ml-3 flex-1">
+                                                        <p class="font-medium text-gray-800">{{ $quota->position_name }}</p>
+                                                        <p class="text-xs text-gray-500">สามารถเลือกได้ทุกคน</p>
+                                                    </div>
+                                                    @if(in_array($quota->position_name, $positions))
+                                                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">เลือกแล้ว</span>
+                                                    @endif
+                                                </label>
                                             @endforeach
-                                        </select>
+                                        </div>
+                                        
+                                        @if(count($positions) >= 3)
+                                            <p class="mt-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                                                เลือกตำแหน่งครบ 3 ตำแหน่งแล้ว ไม่สามารถเลือกเพิ่มได้
+                                            </p>
+                                        @endif
                                     @else
-                                        <input type="text" id="exam_position"
-                                               wire:model="exam_position"
+                                        <input type="text" 
                                                placeholder="กรุณาเลือกระดับที่สอบก่อน"
                                                class="w-full rounded-lg border-gray-200 bg-gray-50 text-sm" readonly>
                                     @endif
-                                    @error('exam_position')
+                                    @error('positions')
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                    @error('positions.*')
                                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                     @enderror
                                 </div>

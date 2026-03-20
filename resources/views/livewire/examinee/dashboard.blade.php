@@ -244,7 +244,7 @@
                             </div>
                             <div>
                                 <dt class="text-xs font-medium text-gray-500">ตำแหน่งที่สมัครสอบ</dt>
-                                <dd class="mt-1 text-sm font-semibold text-blue-600">{{ $latestRegistration?->exam_position ?? '-' }}</dd>
+                                <dd class="mt-1 text-sm font-semibold text-blue-600">{{ $latestRegistration?->exam_position_display ?? '-' }}</dd>
                             </div>
                             <div>
                                 <dt class="text-xs font-medium text-gray-500">เหล่า</dt>
