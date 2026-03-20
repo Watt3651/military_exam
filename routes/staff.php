@@ -9,6 +9,9 @@ use App\Livewire\Staff\Reports\Index as StaffReportsIndex;
 use App\Livewire\Staff\Branches\Create as CreateBranch;
 use App\Livewire\Staff\Branches\Edit as EditBranch;
 use App\Livewire\Staff\Branches\Index as BranchIndex;
+use App\Livewire\Staff\Units\Create as CreateUnit;
+use App\Livewire\Staff\Units\Edit as EditUnit;
+use App\Livewire\Staff\Units\Index as UnitIndex;
 use App\Livewire\Staff\Examinees\Edit as EditExaminee;
 use App\Livewire\Staff\Examinees\Index as ExamineeIndex;
 use App\Livewire\Staff\ExamSessions\Create as CreateExamSession;
@@ -144,6 +147,16 @@ Route::middleware(['auth', 'role:staff', 'ensure.password.changed'])
             Route::get('/', BranchIndex::class)->name('index');
             Route::get('/create', CreateBranch::class)->name('create');
             Route::get('/{id}/edit', EditBranch::class)->name('edit');
+        });
+
+        // ═════════════════════════════════════════
+        // สังกัด (Section 2.3.5)
+        // URL: /staff/units
+        // ═════════════════════════════════════════
+        Route::prefix('units')->name('units.')->group(function () {
+            Route::get('/', UnitIndex::class)->name('index');
+            Route::get('/create', CreateUnit::class)->name('create');
+            Route::get('/{unit}/edit', EditUnit::class)->name('edit');
         });
 
         // ═════════════════════════════════════════

@@ -9,6 +9,7 @@ use App\Models\ExamRegistration;
 use App\Models\ExamSession;
 use App\Models\PositionQuota;
 use App\Models\TestLocation;
+use App\Models\Unit; // เพิ่ม import Unit
 use App\Services\ScoreCalculator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +44,7 @@ class Profile extends Component
     // ─── Examinee Fields ───
     public string $position = '';
     public string $branch_id = '';
+    public string $unit_id = ''; // เพิ่ม unit_id สำหรับสังกัด
     public string $age = '';
     public string $eligible_year = '';
     public array $suspended_years = []; // เปลี่ยนเป็น array เก็บปี พ.ศ. [2566, 2567, ...]
@@ -57,6 +59,7 @@ class Profile extends Component
     public string $national_id = '';
     public ?string $examNumber = null;
     public ?string $currentBranchName = null;
+    public ?string $currentUnitName = null; // เพิ่มชื่อสังกัดปัจจุบัน
     public ?string $currentBorderAreaName = null;
     public ?string $currentTestLocationName = null;
     public ?string $registrationStatus = null;
@@ -77,7 +80,8 @@ class Profile extends Component
     public Collection $branches;
     public Collection $borderAreas;
     public Collection $testLocations;
-    public Collection $positionQuotas;
+    public Collection $units; // เพิ่ม dropdown สังกัด
+    public Collection $positionQuotas; // เพิ่ม position quotas
 
     // ─── Suspended Years Options ───
     public array $availableSuspendedYears = [];
@@ -115,6 +119,7 @@ class Profile extends Component
         $this->branches = Branch::where('is_active', true)->orderBy('code')->get();
         $this->borderAreas = BorderArea::where('is_active', true)->orderBy('code')->get();
         $this->testLocations = TestLocation::where('is_active', true)->orderBy('code')->get();
+        $this->units = Unit::ordered()->get(); // เพิ่ม dropdown สังกัด (ทั้ง active และ inactive)
         $this->positionQuotas = collect();
 
         // ── Check registration period ──
@@ -126,10 +131,11 @@ class Profile extends Component
 
         if ($examinee) {
             $this->hasExamineeProfile = true;
-            $examinee->load(['branch', 'borderArea']);
+            $examinee->load(['branch', 'borderArea', 'unit']);
 
             $this->position = $examinee->position ?? '';
             $this->branch_id = (string) ($examinee->branch_id ?? '');
+            $this->unit_id = (string) ($examinee->unit_id ?? ''); // เพิ่ม unit_id
             $this->age = (string) ($examinee->age ?? '');
             $this->eligible_year = (string) ($examinee->eligible_year ?? '');
             // แปลง suspended_years เป็น array (รองรับทั้ง old int และ new json)
@@ -138,6 +144,7 @@ class Profile extends Component
             $this->border_area_id = (string) ($examinee->border_area_id ?? '');
 
             $this->currentBranchName = $examinee->branch?->name;
+            $this->currentUnitName = $examinee->unit?->display_name; // เพิ่มชื่อสังกัด
             $this->currentBorderAreaName = $examinee->borderArea?->name;
 
             // ── Scores ──
@@ -320,6 +327,7 @@ class Profile extends Component
             'last_name'       => ['required', 'string', 'max:255'],
             'position'        => ['required', 'string', 'max:255'],
             'branch_id'       => ['required', 'exists:branches,id'],
+            'unit_id'         => ['required', 'exists:units,id'], // เพิ่ม validation สังกัด
             'age'             => ['required', 'integer', 'min:18', 'max:60'],
             'eligible_year'   => ['required', 'integer', 'min:2500', 'max:2600'],
             'suspended_years' => ['nullable', 'array'], // เปลี่ยนเป็น array
@@ -368,6 +376,7 @@ class Profile extends Component
                     'user_id' => $user->id,
                     'position' => $validated['rank'] ?? 'ทหาร', // เพิ่มฟิลด์ position
                     'branch_id' => $validated['branch_id'] ?? null, // เพิ่มฟิลด์ branch_id
+                    'unit_id' => $validated['unit_id'] ?? null, // เพิ่มฟิลด์ unit_id
                     'age' => $validated['age'] ?? null, // เพิ่มฟิลด์อื่นๆ ที่จำเป็น
                     'eligible_year' => $validated['eligible_year'] ?? null,
                 ]);
@@ -388,6 +397,7 @@ class Profile extends Component
                 $examineeData = [
                     'position'        => $validated['position'],
                     'branch_id'       => $validated['branch_id'],
+                    'unit_id'         => $validated['unit_id'], // เพิ่ม unit_id
                     'age'             => $validated['age'],
                     'eligible_year'   => $validated['eligible_year'],
                     'suspended_years' => $validated['suspended_years'] ?? [], // เก็บเป็น array

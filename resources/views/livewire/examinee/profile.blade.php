@@ -152,11 +152,11 @@
                             </h4>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {{-- ตำแหน่ง --}}
+                                {{-- สังกัดปัจจุบัน --}}
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-500 mb-1">ตำแหน่งปัจจุบัน</label>
+                                    <label class="block text-sm font-medium text-gray-500 mb-1">สังกัดปัจจุบัน</label>
                                     <div class="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
-                                        <span class="text-sm text-gray-700">{{ $position }}</span>
+                                        <span class="text-sm text-gray-700">{{ $currentUnitName ?? '-' }}</span>
                                     </div>
                                 </div>
 
@@ -387,16 +387,20 @@
                             </h4>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {{-- ตำแหน่ง --}}
+                                {{-- สังกัดปัจจุบัน --}}
                                 <div class="md:col-span-2">
-                                    <label for="position" class="block text-sm font-medium text-gray-700 mb-1">
-                                        ตำแหน่งปัจจุบัน <span class="text-red-500">*</span>
+                                    <label for="unit_id" class="block text-sm font-medium text-gray-700 mb-1">
+                                        สังกัดปัจจุบัน <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" id="position"
-                                           wire:model="position"
-                                           placeholder="เช่น พลทหาร กองร้อยที่ 1"
-                                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2D6A4F] focus:ring-[#2D6A4F] text-sm">
-                                    @error('position')
+                                    <select id="unit_id"
+                                            wire:model="unit_id"
+                                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2D6A4F] focus:ring-[#2D6A4F] text-sm">
+                                        <option value="">เลือกสังกัด</option>
+                                        @foreach ($units->where('is_active', true) as $unit)
+                                            <option value="{{ $unit->id }}">{{ $unit->display_name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('unit_id')
                                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                     @enderror
                                 </div>
