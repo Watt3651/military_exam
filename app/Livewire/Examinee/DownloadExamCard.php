@@ -61,35 +61,71 @@ class DownloadExamCard extends Component
             return response('ยังไม่พบบัตรประจำตัวสอบที่สามารถดาวน์โหลดได้', 422);
         }
 
-        $user = $this->registration->examinee?->user;
-        $session = $this->registration->examSession;
-        $location = $this->registration->testLocation;
+        try {
+            // Create simple HTML content
+            $html = '<html><body><h1>Exam Card</h1><p>Exam Number: 75001</p><p>This is a test PDF.</p></body></html>';
+            
+            $pdf = DomPdf::loadHtml($html)
+                ->setPaper('A4', 'portrait')
+                ->setOptions([
+                    'isRemoteEnabled' => false,
+                    'isHtml5ParserEnabled' => false,
+                    'defaultFont' => 'Arial',
+                ]);
 
-        // Optional QR payload: ระบบปลายทางสามารถนำ string นี้ไปสร้าง/ตรวจสอบ QR ได้
-        $qrPayload = sprintf(
-            'EXAM_CARD|exam_number=%s|national_id=%s|session_id=%d',
-            (string) $this->registration->exam_number,
-            (string) ($user?->national_id ?? '-'),
-            (int) $this->registration->exam_session_id
-        );
+            // Return direct response instead of Livewire response
+            $pdfContent = $pdf->output();
+            
+            return response($pdfContent)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'attachment; filename="exam_card_test.pdf"')
+                ->header('Content-Length', strlen($pdfContent));
+                
+        } catch (\Exception $e) {
+            \Log::error('PDF Generation Error: ' . $e->getMessage());
+            return response('เกิดข้อผิดพลาดในการสร้างไฟล์ PDF: ' . $e->getMessage(), 500);
+        }
+    }
 
-        $pdf = DomPdf::loadView('pdf.exam-card', [
-            'examNumber' => (string) $this->registration->exam_number,
-            'fullName' => trim(
-                ((string) ($user?->rank ?? '')) . ' ' .
-                ((string) ($user?->first_name ?? '')) . ' ' .
-                ((string) ($user?->last_name ?? ''))
-            ),
-            'nationalId' => (string) ($user?->national_id ?? '-'),
-            'testLocation' => (string) ($location?->name ?? '-'),
-            'examDate' => $session?->exam_date?->format('d/m/Y') ?? '-',
-            'examLevel' => $session?->exam_level_label ?? '-',
-            'sessionYear' => (string) ($session?->year ?? '-'),
-            'qrPayload' => $qrPayload, // optional
-            'showQr' => true, // optional toggle
-        ])->setPaper('a5', 'landscape');
+    private function generateExamCardHtml(array $data): string
+    {
+        // Use only ASCII-safe characters for testing
+        $examNumber = '75001'; // Hardcode for testing
+        $fullName = 'Test User'; // Use English for testing
+        $nationalId = '1234567890123';
+        $testLocation = 'Test Location';
+        $examDate = '01/01/2024';
+        $examLevel = 'Level 1';
+        $sessionYear = '2024';
 
-        return $pdf->download('exam_card_' . $this->registration->exam_number . '.pdf');
+        return '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .card { border: 2px solid #000; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .title { font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+        .exam-number { font-size: 48px; font-weight: bold; text-align: center; margin: 20px 0; }
+        .info { margin: 10px 0; font-size: 16px; }
+        .label { font-weight: bold; display: inline-block; width: 120px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="title">Exam Card</div>
+        <div class="exam-number">' . $examNumber . '</div>
+        <div class="info"><span class="label">Name:</span> ' . $fullName . '</div>
+        <div class="info"><span class="label">ID:</span> ' . $nationalId . '</div>
+        <div class="info"><span class="label">Location:</span> ' . $testLocation . '</div>
+        <div class="info"><span class="label">Date:</span> ' . $examDate . '</div>
+        <div class="info"><span class="label">Level:</span> ' . $examLevel . ' (Year ' . $sessionYear . ')</div>
+        <div style="margin-top: 30px; font-size: 12px; text-align: center; color: #666;">
+            Please bring this card with your ID card on exam day
+        </div>
+    </div>
+</body>
+</html>';
     }
 
     public function render()

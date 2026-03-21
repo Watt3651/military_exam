@@ -5,6 +5,7 @@ use App\Livewire\Examinee\DownloadExamCard;
 use App\Livewire\Examinee\ExamRegistration;
 use App\Livewire\Examinee\History;
 use App\Livewire\Examinee\Profile;
+use App\Http\Controllers\ExamCardDownloadController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -65,4 +66,10 @@ Route::middleware(['auth', 'role:examinee', 'ensure.password.changed'])
         // URL: /examinee/download-exam-card
         // ─────────────────────────────────────────
         Route::get('/download-exam-card', DownloadExamCard::class)->name('download-exam-card');
+        
+        // ─────────────────────────────────────────
+        // Download PDF (แยกจาก Livewire)
+        // URL: /examinee/download-pdf
+        // ─────────────────────────────────────────
+        Route::get('/download-pdf', [ExamCardDownloadController::class, 'download'])->name('download-pdf');
     });

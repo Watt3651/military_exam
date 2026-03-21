@@ -318,12 +318,15 @@
                         </a>
 
                         {{-- Download Exam Card --}}
-                        <button type="button"
-                                @if (!$examNumber) disabled @endif
-                                class="group flex flex-col items-center p-5 rounded-xl border-2 transition-all duration-200
-                                       {{ $examNumber
-                                           ? 'border-blue-200 bg-blue-50 hover:border-blue-400 hover:shadow-md cursor-pointer'
-                                           : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' }}">
+                        @if ($examNumber)
+                            <a href="{{ route('examinee.download-exam-card') }}"
+                               class="group flex flex-col items-center p-5 rounded-xl border-2 transition-all duration-200
+                                      border-blue-200 bg-blue-50 hover:border-blue-400 hover:shadow-md cursor-pointer">
+                        @else
+                            <button type="button" disabled
+                                    class="group flex flex-col items-center p-5 rounded-xl border-2 transition-all duration-200
+                                           border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed">
+                        @endif
                             <div class="w-12 h-12 rounded-full flex items-center justify-center mb-3
                                         {{ $examNumber ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-400' }}">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -336,7 +339,11 @@
                             <span class="text-xs mt-1 {{ $examNumber ? 'text-blue-500' : 'text-gray-400' }}">
                                 {{ $examNumber ? 'ดาวน์โหลด PDF' : 'รอออกหมายเลขสอบ' }}
                             </span>
-                        </button>
+                        @if ($examNumber)
+                            </a>
+                        @else
+                            </button>
+                        @endif
 
                         {{-- Exam History --}}
                         <a href="{{ route('examinee.history') }}"
