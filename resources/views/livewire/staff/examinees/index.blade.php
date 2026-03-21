@@ -93,7 +93,9 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผู้เข้าสอบ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ยศ/ตำแหน่ง</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เหล่า</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สังกัด</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานที่สอบ</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หมายเลขสอบ</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะการสมัคร</th>
@@ -111,7 +113,9 @@
                                     <p class="text-sm font-semibold text-gray-900">{{ $examinee->user?->full_name }}</p>
                                     <p class="text-xs text-gray-500">{{ $examinee->user?->national_id }}</p>
                                 </td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ $examinee->user?->rank }} - {{ $examinee->position }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ $examinee->branch?->name ?? '-' }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ $examinee->unit?->name ?? '-' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ $latestReg?->testLocation?->name ?? '-' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700 font-mono">{{ $latestReg?->exam_number ?? '-' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700">

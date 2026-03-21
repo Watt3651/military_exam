@@ -239,8 +239,8 @@
                                 <dd class="mt-1 text-sm font-semibold text-gray-900">{{ auth()->user()->full_name }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs font-medium text-gray-500">ตำแหน่งปัจจุบัน</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $examinee->position ?? '-' }}</dd>
+                                <dt class="text-xs font-medium text-gray-500">สังกัดปัจจุบัน</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ $unitName ?? '-' }}</dd>
                             </div>
                             <div>
                                 <dt class="text-xs font-medium text-gray-500">ตำแหน่งที่สมัครสอบ</dt>

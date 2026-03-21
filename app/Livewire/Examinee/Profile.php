@@ -144,7 +144,7 @@ class Profile extends Component
             $this->border_area_id = (string) ($examinee->border_area_id ?? '');
 
             $this->currentBranchName = $examinee->branch?->name;
-            $this->currentUnitName = $examinee->unit?->display_name; // เพิ่มชื่อสังกัด
+            $this->currentUnitName = $examinee->unit?->name; // เพิ่มชื่อสังกัด
             $this->currentBorderAreaName = $examinee->borderArea?->name;
 
             // ── Scores ──
@@ -183,6 +183,30 @@ class Profile extends Component
             }
 
             // ── Generate available suspended years options ──
+            $this->generateAvailableSuspendedYears();
+        } else {
+            // New examinee - set default values
+            $this->hasExamineeProfile = false;
+            $this->position = $user->rank ?? 'ทหาร';
+            $this->branch_id = '';
+            $this->unit_id = '';
+            $this->age = '';
+            $this->eligible_year = '';
+            $this->suspended_years = [];
+            $this->border_area_id = '';
+            $this->pendingScore = 0.0;
+            $this->specialScore = 0.0;
+            $this->totalScore = 0.0;
+            $this->hasRegistration = false;
+            $this->examNumber = '';
+            $this->test_location_id = '';
+            $this->currentTestLocationName = '';
+            $this->registrationStatus = '';
+            $this->positions = [];
+            $this->exam_level = '';
+            $this->positionQuotas = collect();
+            
+            // Generate available suspended years for new examinee
             $this->generateAvailableSuspendedYears();
         }
 
@@ -317,6 +341,9 @@ class Profile extends Component
 
     public function save(): void
     {
+        // Debug: ตรวจสอบว่า method ถูกเรียกหรือไม่
+        error_log('SAVE METHOD CALLED!');
+        
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
@@ -327,7 +354,7 @@ class Profile extends Component
             'last_name'       => ['required', 'string', 'max:255'],
             'position'        => ['required', 'string', 'max:255'],
             'branch_id'       => ['required', 'exists:branches,id'],
-            'unit_id'         => ['required', 'exists:units,id'], // เพิ่ม validation สังกัด
+            'unit_id'         => ['required', 'exists:units,id'], // กลับเป็น required
             'age'             => ['required', 'integer', 'min:18', 'max:60'],
             'eligible_year'   => ['required', 'integer', 'min:2500', 'max:2600'],
             'suspended_years' => ['nullable', 'array'], // เปลี่ยนเป็น array
@@ -363,6 +390,13 @@ class Profile extends Component
         ]);
 
         try {
+            // Debug: แสดงข้อมูลที่จะบันทึก
+            error_log('Profile Save Debug: ' . json_encode([
+                'unit_id_from_form' => $this->unit_id,
+                'validated_unit_id' => $this->unit_id ?? 'NULL',
+                'hasExamineeProfile' => $this->hasExamineeProfile,
+            ]));
+
             DB::transaction(function () use ($user, $validated) {
                 // 1. Update User
                 $user->update([
@@ -372,14 +406,18 @@ class Profile extends Component
                 ]);
 
                 // 2. Get or Create Examinee
-                $examinee = $user->examinee ?? $user->examinee()->create([
-                    'user_id' => $user->id,
-                    'position' => $validated['rank'] ?? 'ทหาร', // เพิ่มฟิลด์ position
-                    'branch_id' => $validated['branch_id'] ?? null, // เพิ่มฟิลด์ branch_id
-                    'unit_id' => $validated['unit_id'] ?? null, // เพิ่มฟิลด์ unit_id
-                    'age' => $validated['age'] ?? null, // เพิ่มฟิลด์อื่นๆ ที่จำเป็น
-                    'eligible_year' => $validated['eligible_year'] ?? null,
-                ]);
+                if ($this->hasExamineeProfile) {
+                    $examinee = $user->examinee;
+                } else {
+                    $examinee = $user->examinee()->create([
+                        'user_id' => $user->id,
+                        'position' => $validated['rank'] ?? 'ทหาร',
+                        'branch_id' => $validated['branch_id'] ?? null,
+                        'unit_id' => $validated['unit_id'] ?? null,
+                        'age' => $validated['age'] ?? null,
+                        'eligible_year' => $validated['eligible_year'] ?? null,
+                    ]);
+                }
 
                 // 3. Calculate scores
                 $calc = new ScoreCalculator();
@@ -397,13 +435,19 @@ class Profile extends Component
                 $examineeData = [
                     'position'        => $validated['position'],
                     'branch_id'       => $validated['branch_id'],
-                    'unit_id'         => $validated['unit_id'], // เพิ่ม unit_id
+                    'unit_id'         => $validated['unit_id'] ?? null, // เพิ่ม unit_id
                     'age'             => $validated['age'],
                     'eligible_year'   => $validated['eligible_year'],
                     'suspended_years' => $validated['suspended_years'] ?? [], // เก็บเป็น array
                     'pending_score'   => $scores['pending_score'],
                     'special_score'   => $scores['special_score'],
                 ];
+
+                // Debug: แสดงข้อมูลที่จะบันทึก
+                error_log('Saving examinee data: ' . json_encode([
+                    'examineeData' => $examineeData,
+                    'validated_unit_id' => $validated['unit_id'] ?? 'NULL',
+                ]));
 
                 // border_area editable only during registration
                 if ($this->canEditRegistrationFields) {
@@ -416,6 +460,23 @@ class Profile extends Component
                 $this->specialScore = $scores['special_score'];
                 $this->totalScore = $scores['total_score'];
                 $this->hasExamineeProfile = true;
+
+                // Update Examinee with new data - ใช้วิธี direct update
+                $updateResult = DB::table('examinees')
+                    ->where('id', $examinee->id)
+                    ->update([
+                        'position' => $validated['position'],
+                        'branch_id' => $validated['branch_id'],
+                        'unit_id' => $validated['unit_id'],
+                        'age' => $validated['age'],
+                        'eligible_year' => $validated['eligible_year'],
+                        'suspended_years' => json_encode($validated['suspended_years'] ?? []),
+                        'pending_score' => $scores['pending_score'],
+                        'special_score' => $scores['special_score'],
+                        'updated_at' => now(),
+                    ]);
+
+                error_log('Direct update result: ' . $updateResult);
 
                 if ($this->canEditRegistrationFields) {
                     $borderArea = $this->borderAreas->firstWhere('id', (int) ($validated['border_area_id'] ?? 0));
@@ -456,6 +517,11 @@ class Profile extends Component
                 $branch = $this->branches->firstWhere('id', (int) $validated['branch_id']);
                 $this->currentBranchName = $branch?->name;
 
+                // Update current unit name and unit_id after save
+                $unit = $this->units->firstWhere('id', (int) $validated['unit_id']);
+                $this->currentUnitName = $unit?->name;
+                $this->unit_id = (string) $validated['unit_id'];
+
                 // Refresh available suspended years
                 $this->generateAvailableSuspendedYears();
             });
@@ -463,6 +529,7 @@ class Profile extends Component
             session()->flash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
 
         } catch (\Exception $e) {
+            error_log('Profile Save Error: ' . $e->getMessage());
             $this->addError('general', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
         }
     }

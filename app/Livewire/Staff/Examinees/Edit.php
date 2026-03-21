@@ -6,10 +6,10 @@ use App\Models\BorderArea;
 use App\Models\Branch;
 use App\Models\DataReviewLog;
 use App\Models\Examinee;
-use App\Models\ExamineeEditLog;
 use App\Models\ExamRegistration;
 use App\Models\TestLocation;
-use App\Notifications\DataReviewNotification;
+use App\Models\Unit;
+use App\Notifications\DataReviewNotification as NotificationDataReview;
 use App\Services\ScoreCalculator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -29,9 +29,11 @@ class Edit extends Component
     public Examinee $examinee;
     public ?ExamRegistration $latestRegistration = null;
 
+    // ─── Dropdown Data ───
     public Collection $branches;
     public Collection $borderAreas;
     public Collection $testLocations;
+    public Collection $units; // เพิ่ม units
     public Collection $editLogs;
 
     // ─── Suspended Years Options ───
@@ -44,6 +46,7 @@ class Edit extends Component
     public string $email = '';
     public string $position = '';
     public string $branch_id = '';
+    public string $unit_id = ''; // เพิ่ม unit_id
     public string $age = '';
     public string $eligible_year = '';
     public array $suspended_years = []; // เปลี่ยนเป็น array เก็บปี พ.ศ.
@@ -73,9 +76,10 @@ class Edit extends Component
         $this->branches = Branch::query()->orderBy('code')->get(['id', 'code', 'name']);
         $this->borderAreas = BorderArea::query()->orderBy('code')->get(['id', 'code', 'name', 'special_score']);
         $this->testLocations = TestLocation::query()->orderBy('code')->get(['id', 'code', 'name']);
+        $this->units = Unit::ordered()->get(['id', 'code', 'name', 'display_name']); // เพิ่ม units
 
         $this->examinee = Examinee::query()
-            ->with(['user', 'examRegistrations' => fn ($q) => $q->orderByDesc('registered_at')])
+            ->with(['user', 'branch', 'unit', 'examRegistrations' => fn ($q) => $q->orderByDesc('registered_at')])
             ->findOrFail($id);
 
         $this->latestRegistration = $this->examinee->examRegistrations->first();
@@ -87,6 +91,7 @@ class Edit extends Component
         $this->email = (string) ($this->examinee->user->email ?? '');
         $this->position = (string) $this->examinee->position;
         $this->branch_id = (string) $this->examinee->branch_id;
+        $this->unit_id = (string) ($this->examinee->unit_id ?? ''); // เพิ่ม unit_id
         $this->age = (string) $this->examinee->age;
         $this->eligible_year = (string) $this->examinee->eligible_year;
         // แปลง suspended_years เป็น array
@@ -156,6 +161,7 @@ class Edit extends Component
             'email' => ['nullable', 'email', 'max:255'],
             'position' => ['required', 'string', 'max:255'],
             'branch_id' => ['required', 'exists:branches,id'],
+            'unit_id' => ['nullable', 'exists:units,id'],
             'age' => ['required', 'integer', 'min:18', 'max:60'],
             'eligible_year' => ['required', 'integer', 'min:2500', 'max:2600'],
             'suspended_years' => ['nullable', 'array'], // เปลี่ยนเป็น array
@@ -228,6 +234,7 @@ class Edit extends Component
 
             $this->logIfChanged('position', $this->examinee->position, $validated['position'], $staff->id, $validated['reason']);
             $this->logIfChanged('branch_id', (string) $this->examinee->branch_id, (string) $validated['branch_id'], $staff->id, $validated['reason']);
+            $this->logIfChanged('unit_id', (string) ($this->examinee->unit_id ?? ''), (string) ($validated['unit_id'] ?? ''), $staff->id, $validated['reason']);
             $this->logIfChanged('age', (string) $this->examinee->age, (string) $validated['age'], $staff->id, $validated['reason']);
             $this->logIfChanged('eligible_year', (string) $this->examinee->eligible_year, (string) $validated['eligible_year'], $staff->id, $validated['reason']);
             $this->logIfChanged('suspended_years', json_encode($this->examinee->suspended_years ?? []), json_encode($validated['suspended_years'] ?? []), $staff->id, $validated['reason']);
@@ -238,6 +245,7 @@ class Edit extends Component
             $this->examinee->update([
                 'position' => $validated['position'],
                 'branch_id' => $validated['branch_id'],
+                'unit_id' => $validated['unit_id'] ?? null,
                 'age' => $validated['age'],
                 'eligible_year' => $validated['eligible_year'],
                 'suspended_years' => $validated['suspended_years'] ?? [], // เก็บเป็น array
