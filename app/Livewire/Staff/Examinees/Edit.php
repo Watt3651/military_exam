@@ -6,6 +6,7 @@ use App\Models\BorderArea;
 use App\Models\Branch;
 use App\Models\DataReviewLog;
 use App\Models\Examinee;
+use App\Models\ExamineeEditLog;
 use App\Models\ExamRegistration;
 use App\Models\TestLocation;
 use App\Models\Unit;
@@ -76,7 +77,7 @@ class Edit extends Component
         $this->branches = Branch::query()->orderBy('code')->get(['id', 'code', 'name']);
         $this->borderAreas = BorderArea::query()->orderBy('code')->get(['id', 'code', 'name', 'special_score']);
         $this->testLocations = TestLocation::query()->orderBy('code')->get(['id', 'code', 'name']);
-        $this->units = Unit::ordered()->get(['id', 'code', 'name', 'display_name']); // เพิ่ม units
+        $this->units = Unit::ordered()->get(['id', 'code', 'name']); // เพิ่ม units
 
         $this->examinee = Examinee::query()
             ->with(['user', 'branch', 'unit', 'examRegistrations' => fn ($q) => $q->orderByDesc('registered_at')])
@@ -205,6 +206,9 @@ class Edit extends Component
 
     public function save(): void
     {
+        // Debug: ตรวจสอบว่า method ถูกเรียกหรือไม่
+        error_log('STAFF SAVE METHOD CALLED!');
+        
         $validated = $this->validate();
 
         /** @var \App\Models\User $staff */
@@ -242,17 +246,33 @@ class Edit extends Component
             $this->logIfChanged('pending_score', (string) $this->examinee->pending_score, (string) $scores['pending_score'], $staff->id, $validated['reason']);
             $this->logIfChanged('special_score', (string) $this->examinee->special_score, (string) $scores['special_score'], $staff->id, $validated['reason']);
 
-            $this->examinee->update([
-                'position' => $validated['position'],
-                'branch_id' => $validated['branch_id'],
-                'unit_id' => $validated['unit_id'] ?? null,
-                'age' => $validated['age'],
-                'eligible_year' => $validated['eligible_year'],
-                'suspended_years' => $validated['suspended_years'] ?? [], // เก็บเป็น array
-                'border_area_id' => $validated['border_area_id'] ?: null,
-                'pending_score' => $scores['pending_score'],
-                'special_score' => $scores['special_score'],
-            ]);
+            // Update Examinee with new data - ใช้วิธี direct update
+                $updateResult = DB::table('examinees')
+                    ->where('id', $this->examinee->id)
+                    ->update([
+                        'position' => $validated['position'],
+                        'branch_id' => $validated['branch_id'],
+                        'unit_id' => $validated['unit_id'] ?? null,
+                        'age' => $validated['age'],
+                        'eligible_year' => $validated['eligible_year'],
+                        'suspended_years' => json_encode($validated['suspended_years'] ?? []),
+                        'border_area_id' => $validated['border_area_id'] ?: null,
+                        'pending_score' => $scores['pending_score'],
+                        'special_score' => $scores['special_score'],
+                        'updated_at' => now(),
+                    ]);
+
+                error_log('Staff Direct Update Result: ' . $updateResult);
+
+            // Debug: ตรวจสอบว่าบันทึกสำเร็จหรือไม่
+            error_log('Staff Edit Debug: ' . json_encode([
+                'examinee_id' => $this->examinee->id,
+                'validated_unit_id' => $validated['unit_id'] ?? 'NULL',
+                'update_result' => 'success',
+            ]));
+
+            // Update properties with fresh data after save
+            $this->unit_id = (string) ($validated['unit_id'] ?? '');
 
             if ($this->latestRegistration) {
                 $this->logIfChanged('test_location_id', (string) $this->latestRegistration->test_location_id, (string) ($validated['test_location_id'] ?? ''), $staff->id, $validated['reason']);
@@ -392,7 +412,7 @@ class Edit extends Component
 
                 // 1. สร้าง notification
                 $this->examinee->user->notify(
-                    new DataReviewNotification($this->notificationMessage, $staff)
+                    new NotificationDataReview($this->notificationMessage, $staff)
                 );
 
                 \Log::info('Notification sent successfully');
