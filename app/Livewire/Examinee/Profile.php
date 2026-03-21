@@ -462,21 +462,34 @@ class Profile extends Component
                 $this->hasExamineeProfile = true;
 
                 // Update Examinee with new data - ใช้วิธี direct update
+                $updateData = [
+                    'position' => $validated['position'],
+                    'branch_id' => $validated['branch_id'],
+                    'unit_id' => $validated['unit_id'],
+                    'age' => $validated['age'],
+                    'eligible_year' => $validated['eligible_year'],
+                    'suspended_years' => json_encode($validated['suspended_years'] ?? []),
+                    'pending_score' => $scores['pending_score'],
+                    'special_score' => $scores['special_score'],
+                    'updated_at' => now(),
+                ];
+
+                // Add border_area_id if provided
+                if (!empty($validated['border_area_id'])) {
+                    $updateData['border_area_id'] = $validated['border_area_id'];
+                }
+
                 $updateResult = DB::table('examinees')
                     ->where('id', $examinee->id)
-                    ->update([
-                        'position' => $validated['position'],
-                        'branch_id' => $validated['branch_id'],
-                        'unit_id' => $validated['unit_id'],
-                        'age' => $validated['age'],
-                        'eligible_year' => $validated['eligible_year'],
-                        'suspended_years' => json_encode($validated['suspended_years'] ?? []),
-                        'pending_score' => $scores['pending_score'],
-                        'special_score' => $scores['special_score'],
-                        'updated_at' => now(),
-                    ]);
+                    ->update($updateData);
 
                 error_log('Direct update result: ' . $updateResult);
+
+                // Update properties with fresh data after save
+                $this->border_area_id = (string) ($validated['border_area_id'] ?? '');
+                $this->currentBorderAreaName = $this->borderAreas->firstWhere('id', (int) $this->border_area_id)?->name;
+                $this->unit_id = (string) ($validated['unit_id'] ?? '');
+                $this->currentUnitName = $this->units->firstWhere('id', (int) $this->unit_id)?->name;
 
                 if ($this->canEditRegistrationFields) {
                     $borderArea = $this->borderAreas->firstWhere('id', (int) ($validated['border_area_id'] ?? 0));
