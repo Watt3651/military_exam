@@ -1,0 +1,52 @@
+name: Smoke Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_DATABASE: rtfrnd_ci
+          MARIADB_USER: rtfrnd
+          MARIADB_PASSWORD: rtfrnd
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -urtfrnd -prtfrnd"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql
+
+      - name: Prepare CI env
+        run: |
+          cp .env.ci.example .env.ci
+          chmod +x scripts/*.sh
+
+      - name: Start PHP server
+        run: |
+          set -a
+          source ./.env.ci
+          set +a
+          php -S 127.0.0.1:18080 >/tmp/rtfrnd-ci.log 2>&1 &
+
+      - name: Run smoke test
+        run: |
+          SMOKE_ENV_FILE=.env.ci \
+          APP_URL=http://127.0.0.1:18080 \
+          SMOKE_AUTO_PREPARE=1 \
+          SMOKE_AUTO_CLEANUP=1 \
+          ./scripts/smoke-test.sh

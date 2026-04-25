@@ -1,0 +1,4 @@
+.env
+data/readiness.sqlite
+.tmp/
+readiness-app.zip
