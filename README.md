@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# rtfrnd
-=======
 # ระบบรายงานสถานะความพร้อม — กองเรือยุทธการ
 
 เวอร์ชันนี้เปลี่ยนจากการเก็บข้อมูลใน `readiness.json` ไปเป็นฐานข้อมูลผ่าน PDO แล้ว โดยค่าเริ่มต้นใช้ SQLite ไฟล์ `data/readiness.sqlite` สำหรับ local/dev และรองรับ MySQL/MariaDB สำหรับ production พร้อม bootstrap schema, seed users, seed API client และย้ายข้อมูลเดิมจาก `data/readiness.json` ให้โดยอัตโนมัติเมื่อรันครั้งแรก
@@ -421,4 +418,3 @@ readiness/
     ├── readiness.json
     └── readiness.sqlite
 ```
->>>>>>> 1bc2f7d (Start Project)

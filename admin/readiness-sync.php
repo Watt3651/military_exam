@@ -88,11 +88,14 @@ $formatBytes = static function (int $bytes): string {
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .stat{border:1px solid var(--theme-border-soft);border-radius:10px;padding:14px;background:var(--theme-surface-soft)}
 .stat .k{font-size:12px;color:var(--theme-text-muted)}.stat .v{font-size:24px;font-weight:600;margin-top:4px}
-.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.actions{display:grid;grid-template-columns:minmax(220px,auto) minmax(320px,1fr);gap:12px;align-items:start}
+.action-card{border:1px solid var(--theme-border-soft);border-radius:10px;padding:14px;background:var(--theme-surface-soft);display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start}
+.action-card form{width:100%}
+.action-card button{margin-top:0}
 .checkboxes{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:13px}
 .hint{font-size:12px;color:var(--theme-text-soft);line-height:1.7}
 .muted{color:var(--theme-text-soft);font-size:12px}
-@media(max-width:1000px){.stats{grid-template-columns:1fr 1fr}table{display:block;overflow-x:auto;white-space:nowrap}}
+@media(max-width:1000px){.stats{grid-template-columns:1fr 1fr}.actions{grid-template-columns:1fr}table{display:block;overflow-x:auto;white-space:nowrap}}
 @media(max-width:700px){.stats{grid-template-columns:1fr}}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
@@ -144,20 +147,24 @@ $formatBytes = static function (int $bytes): string {
   <div class="section">
     <h2>ดำเนินการ</h2>
     <div class="actions">
-      <form method="POST">
-        <?= csrfInput() ?>
-        <input type="hidden" name="action" value="export_backup">
-        <button class="btn-secondary" type="submit">Export Backup</button>
-      </form>
-      <form method="POST">
-        <?= csrfInput() ?>
-        <input type="hidden" name="action" value="apply_sync">
-        <div class="checkboxes">
-          <?php if (appIsProduction()): ?><label><input type="checkbox" name="confirm_production" value="1"> ยืนยันว่าเข้าใจว่ากำลัง apply บน production</label><?php endif; ?>
-          <?php if (($diffData['impact']['has_usage_risk'] ?? false)): ?><label><input type="checkbox" name="confirm_impact" value="1"> ยืนยันว่ารับทราบผลกระทบต่อข้อมูลจริง</label><?php endif; ?>
-        </div>
-        <button style="margin-top:12px" class="btn-danger" type="submit" onclick="return confirm('ยืนยันการ apply sync จาก config ลงฐานข้อมูล? ระบบจะสร้าง backup ก่อนทุกครั้ง')">Apply Sync พร้อม Backup</button>
-      </form>
+      <div class="action-card">
+        <form method="POST">
+          <?= csrfInput() ?>
+          <input type="hidden" name="action" value="export_backup">
+          <button class="btn-secondary" type="submit">Export Backup</button>
+        </form>
+      </div>
+      <div class="action-card">
+        <form method="POST">
+          <?= csrfInput() ?>
+          <input type="hidden" name="action" value="apply_sync">
+          <div class="checkboxes">
+            <?php if (appIsProduction()): ?><label><input type="checkbox" name="confirm_production" value="1"> ยืนยันว่าเข้าใจว่ากำลัง apply บน production</label><?php endif; ?>
+            <?php if (($diffData['impact']['has_usage_risk'] ?? false)): ?><label><input type="checkbox" name="confirm_impact" value="1"> ยืนยันว่ารับทราบผลกระทบต่อข้อมูลจริง</label><?php endif; ?>
+          </div>
+          <button style="margin-top:12px" class="btn-danger" type="submit" onclick="return confirm('ยืนยันการ apply sync จาก config ลงฐานข้อมูล? ระบบจะสร้าง backup ก่อนทุกครั้ง')">Apply Sync พร้อม Backup</button>
+        </form>
+      </div>
     </div>
   </div>
 
