@@ -9,12 +9,14 @@ use Barryvdh\DomPDF\PDF as DomPdfWrapper;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use TCPDF;
 
 /**
  * ReportGenerator Service
@@ -26,7 +28,22 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class ReportGenerator
 {
     /**
-     * Generate PDF รายชื่อผู้สอบ แยกตามสถานที่สอบ
+     * Clean UTF-8 string to remove invalid characters
+     */
+    private function cleanUtf8(string $string): string
+    {
+        // Remove invalid UTF-8 characters
+        $string = mb_convert_encoding($string, 'UTF-8', 'UTF-8');
+        
+        // Remove control characters except newlines and tabs
+        $string = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $string);
+        
+        // Ensure it's valid UTF-8
+        return mb_check_encoding($string, 'UTF-8') ? $string : '';
+    }
+
+    /**
+     * Generate PDF รายชื่อผู้สอบ แยกตามสถานที่สอบ (ใช้ TCPDF)
      *
      * Section 2.7.1
      *
@@ -36,9 +53,9 @@ class ReportGenerator
      *
      * @param  int                  $testLocationId  สถานที่สอบ (required)
      * @param  array<string,mixed>  $filters         ฟิลเตอร์เสริม
-     * @return DomPdfWrapper
+     * @return TCPDF
      */
-    public function generateExamineeListPDF(int $testLocationId, array $filters = []): DomPdfWrapper
+    public function generateExamineeListPDF(int $testLocationId, array $filters = []): TCPDF
     {
         $selectedSession = null;
 
@@ -97,28 +114,134 @@ class ReportGenerator
                 ? ((float) $registration->examinee->pending_score + (float) $registration->examinee->special_score)
                 : 0.0;
 
+            // Clean UTF-8 data
+            $cleanRank = $user ? $this->cleanUtf8($user->rank) : '';
+            $cleanFirstName = $user ? $this->cleanUtf8($user->first_name) : '';
+            $cleanLastName = $user ? $this->cleanUtf8($user->last_name) : '';
+            $cleanNationalId = $user ? $this->cleanUtf8($user->national_id) : '';
+            $cleanBranchName = $branch ? $this->cleanUtf8($branch->name) : '';
+            $cleanPosition = $this->cleanUtf8($registration->exam_position_display);
+
             return [
                 'exam_number' => (string) ($registration->exam_number ?? '-'),
-                'full_name' => trim(
-                    ((string) ($user?->rank ?? '')) . ' ' .
-                    ((string) ($user?->first_name ?? '')) . ' ' .
-                    ((string) ($user?->last_name ?? ''))
-                ),
-                'national_id' => (string) ($user?->national_id ?? '-'),
-                'branch' => (string) ($branch?->name ?? '-'),
-                'exam_position' => (string) $registration->exam_position_display, // เพิ่มตำแหน่งที่เลือก
+                'full_name' => trim($cleanRank . ' ' . $cleanFirstName . ' ' . $cleanLastName),
+                'national_id' => (string) $cleanNationalId,
+                'branch' => (string) $cleanBranchName,
+                'exam_position' => (string) $cleanPosition,
                 'total_score' => number_format($totalScore, 2),
             ];
         });
 
-        return DomPdf::loadView('pdf.examinee-list', [
-            'locationName' => $locationName,
-            'examDate' => $examDate,
-            'examLevelLabel' => $sessionLabel,
-            'rows' => $tableRows,
-            'printedAt' => $printedAt,
-            'printedBy' => $printedBy,
-        ])->setPaper('a4', 'portrait');
+        // Clean location data
+        $locationName = $this->cleanUtf8($locationName);
+        $sessionLabel = $this->cleanUtf8($sessionLabel);
+        $examDate = $this->cleanUtf8($examDate);
+        $printedAt = $this->cleanUtf8($printedAt);
+        $printedBy = $this->cleanUtf8($printedBy);
+
+        // Create TCPDF instance
+        $pdf = new TCPDF('P', PDF_UNIT, 'A4', true, 'UTF-8', false);
+        
+        // Set document information
+        $pdf->SetCreator('Military Exam System');
+        $pdf->SetAuthor('Military Exam System');
+        $pdf->SetTitle('รายชื่อผู้สอบ');
+        
+        // Remove default header/footer
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        
+        // Set margins
+        $pdf->SetMargins(10, 10, 10);
+        
+        // Set auto page breaks
+        $pdf->SetAutoPageBreak(true, 10);
+        
+        // Add a page
+        $pdf->AddPage();
+        
+        // Set font - use a font that supports Thai
+        $pdf->SetFont('freeserif', '', 10);
+        
+        // Build HTML content with debug
+        $totalRows = $tableRows->count();
+        \Log::info('ReportGenerator: Processing ' . $totalRows . ' rows for PDF');
+        
+        $html = '
+        <style>
+            body { font-family: freeserif, sans-serif; font-size: 10px; color: #111827; }
+            .title { font-size: 14px; font-weight: bold; margin-bottom: 8px; text-align: center; }
+            .meta { margin-bottom: 8px; }
+            .meta div { margin: 2px 0; }
+            table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+            th, td { border: 1px solid #d1d5db; padding: 4px; font-size: 9px; }
+            th { background: #f3f4f6; text-align: left; font-weight: bold; }
+            .text-right { text-align: right; }
+            .footer { margin-top: 10px; font-size: 8px; color: #374151; }
+            .no-data { text-align: center; font-style: italic; }
+        </style>
+        <body>
+            <div class="title">รายชื่อผู้สอบ (แยกตามสถานที่สอบ)</div>
+            
+            <div class="meta">
+                <div><strong>สถานที่สอบ:</strong> ' . htmlspecialchars($locationName) . '</div>
+                <div><strong>วันที่สอบ:</strong> ' . htmlspecialchars($examDate) . '</div>
+                <div><strong>ระดับการสอบ:</strong> ' . htmlspecialchars($sessionLabel) . '</div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th width="10%">หมายเลขสอบ</th>
+                        <th width="25%">ยศ ชื่อ-นามสกุล</th>
+                        <th width="15%">หมายเลขประจำตัว</th>
+                        <th width="15%">เหล่า</th>
+                        <th width="20%">ตำแหน่งที่เลือก</th>
+                        <th width="15%" class="text-right">คะแนนรวม</th>
+                    </tr>
+                </thead>
+                <tbody>';
+        
+        if ($tableRows->count() > 0) {
+            foreach ($tableRows as $index => $row) {
+                // Debug each row
+                \Log::info("Row $index: " . json_encode($row, JSON_UNESCAPED_UNICODE));
+                
+                $html .= '
+                    <tr>
+                        <td>' . htmlspecialchars($row['exam_number']) . '</td>
+                        <td>' . htmlspecialchars($row['full_name']) . '</td>
+                        <td>' . htmlspecialchars($row['national_id']) . '</td>
+                        <td>' . htmlspecialchars($row['branch']) . '</td>
+                        <td>' . htmlspecialchars($row['exam_position']) . '</td>
+                        <td class="text-right">' . htmlspecialchars($row['total_score']) . '</td>
+                    </tr>';
+            }
+        } else {
+            $html .= '
+                    <tr>
+                        <td colspan="6" class="no-data">ไม่พบข้อมูลผู้เข้าสอบตามเงื่อนไขที่เลือก</td>
+                    </tr>';
+        }
+        
+        $html .= '
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                <div><strong>จำนวนผู้สอบทั้งหมด:</strong> ' . $tableRows->count() . ' คน</div>
+                <div><strong>วันที่พิมพ์รายงาน:</strong> ' . htmlspecialchars($printedAt) . '</div>
+                <div><strong>ผู้พิมพ์รายงาน:</strong> ' . htmlspecialchars($printedBy) . '</div>
+            </div>
+        </body>';
+        
+        // Debug final HTML length
+        \Log::info('Final HTML length: ' . strlen($html));
+        
+        // Write HTML content
+        $pdf->writeHTML($html, true, false, true, false, '');
+        
+        return $pdf;
     }
 
     /**

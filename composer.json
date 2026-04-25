@@ -18,6 +18,7 @@
         "spatie/laravel-backup": "^9.3",
         "spatie/laravel-permission": "^6.11",
         "tallstackui/tallstackui": "^2.0",
+        "tecnickcom/tcpdf": "^6.11",
         "wire-elements/modal": "^2.0"
     },
     "require-dev": {

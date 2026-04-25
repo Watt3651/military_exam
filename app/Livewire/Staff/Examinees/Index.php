@@ -89,6 +89,7 @@ class Index extends Component
             ->with([
                 'user',
                 'branch',
+                'unit', // เพิ่ม unit relationship
                 'examRegistrations' => function ($q): void {
                     $q->with('testLocation')->orderByDesc('registered_at');
                 },

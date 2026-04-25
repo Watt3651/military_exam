@@ -393,13 +393,15 @@
                                         สังกัดปัจจุบัน <span class="text-red-500">*</span>
                                     </label>
                                     <select id="unit_id"
-                                            wire:model="unit_id"
+                                            wire:model.live="unit_id"
                                             class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2D6A4F] focus:ring-[#2D6A4F] text-sm">
                                         <option value="">เลือกสังกัด</option>
                                         @foreach ($units->where('is_active', true) as $unit)
-                                            <option value="{{ $unit->id }}">{{ $unit->display_name }}</option>
+                                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
                                         @endforeach
                                     </select>
+                                    {{-- Debug: แสดงค่า unit_id ปัจจุบัน --}}
+                                    <p class="mt-1 text-xs text-gray-500">Current unit_id: {{ $unit_id }}</p>
                                     @error('unit_id')
                                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                     @enderror
@@ -700,7 +702,8 @@
                             กลับ Dashboard
                         </a>
 
-                        <button type="submit"
+                        <button type="button"
+                                wire:click="save"
                                 wire:loading.attr="disabled"
                                 wire:loading.class="opacity-75 cursor-not-allowed"
                                 class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-[#2D6A4F] rounded-lg hover:bg-[#1B4332] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F] focus:ring-offset-2 transition-colors shadow-sm">

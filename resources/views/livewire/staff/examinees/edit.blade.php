@@ -19,12 +19,6 @@
             </div>
         @endif
 
-        {{-- Simple Test Button --}}
-        <div class="fixed bottom-4 left-4 bg-purple-500 text-white p-2 rounded text-xs z-50">
-            Debug: <button wire:click="$set('alertSuccess', true)" class="bg-white text-purple-500 px-2 py-1 rounded text-xs">Test Alert</button>
-            <button wire:click="openNotificationModal" class="bg-white text-purple-500 px-2 py-1 rounded text-xs ml-2">Test Modal</button>
-        </div>
-
         {{-- Notification Modal --}}
         @if ($showNotificationModal)
             <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
@@ -111,6 +105,16 @@
                             @endforeach
                         </select>
                         <x-input-error :messages="$errors->get('branch_id')" class="mt-2" />
+                    </div>
+                    <div>
+                        <x-input-label for="unit_id" value="สังกัด" />
+                        <select id="unit_id" wire:model="unit_id" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            <option value="">เลือกสังกัด</option>
+                            @foreach ($units as $unit)
+                                <option value="{{ $unit->id }}">{{ $unit->code }} - {{ $unit->name }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('unit_id')" class="mt-2" />
                     </div>
                     <div>
                         <x-input-label for="age" value="อายุ" />

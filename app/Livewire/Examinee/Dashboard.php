@@ -43,6 +43,7 @@ class Dashboard extends Component
 
     // ─── Extra Info ───
     public ?string $branchName = null;
+    public ?string $unitName = null; // เพิ่ม unitName
     public ?string $borderAreaName = null;
     public ?string $testLocationName = null;
     public ?string $examNumber = null;
@@ -60,15 +61,16 @@ class Dashboard extends Component
         $this->hasExamineeProfile = $this->examinee !== null;
 
         if ($this->hasExamineeProfile) {
-            $this->examinee->load(['branch', 'borderArea']);
+            $this->examinee->load(['branch', 'unit', 'borderArea']); // เพิ่ม unit
 
             // Scores
             $this->pendingScore = (float) $this->examinee->pending_score;
             $this->specialScore = (float) $this->examinee->special_score;
             $this->totalScore = $this->examinee->total_score;
 
-            // Branch & Border Area
+            // Branch & Unit & Border Area
             $this->branchName = $this->examinee->branch?->name;
+            $this->unitName = $this->examinee->unit?->name; // เพิ่ม unitName
             $this->borderAreaName = $this->examinee->borderArea
                 ? "{$this->examinee->borderArea->name} ({$this->examinee->borderArea->code})"
                 : null;

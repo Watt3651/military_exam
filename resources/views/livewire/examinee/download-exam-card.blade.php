@@ -17,7 +17,7 @@
                 <div class="mt-6">
                     <button type="button"
                             wire:click="download"
-                            class="inline-flex items-center px-4 py-2 rounded-md bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700">
+                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-green-100">
                         ดาวน์โหลดบัตรประจำตัวสอบ (PDF)
                     </button>
                 </div>
