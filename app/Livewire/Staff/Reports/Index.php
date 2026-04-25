@@ -8,6 +8,7 @@ use App\Models\TestLocation;
 use App\Services\ReportGenerator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -108,30 +109,69 @@ class Index extends Component
 
     public function generate(ReportGenerator $reportGenerator): BinaryFileResponse|IlluminateResponse
     {
-        $validated = $this->validate();
-        $testLocationId = $validated['test_location_id'] ?? $this->test_location_id;
-        $branchId = $validated['branch_id'] ?? $this->branch_id;
-        $examSessionId = $validated['exam_session_id'] ?? $this->exam_session_id;
+        // Debug: Log method call
+        Log::info('Reports generate method called');
+        
+        try {
+            $validated = $this->validate();
+            Log::info('Validation passed', $validated);
+            
+            $testLocationId = $validated['test_location_id'] ?? $this->test_location_id;
+            $branchId = $validated['branch_id'] ?? $this->branch_id;
+            $examSessionId = $validated['exam_session_id'] ?? $this->exam_session_id;
 
-        if ($validated['reportType'] === 'all_examinees_excel') {
-            return $reportGenerator->exportAllExaminees(
-                examSessionId: (int) $examSessionId,
+            Log::info("Report type: {$validated['reportType']}");
+            Log::info("Test location ID: $testLocationId");
+            Log::info("Branch ID: $branchId");
+            Log::info("Exam session ID: $examSessionId");
+
+            if ($validated['reportType'] === 'all_examinees_excel') {
+                Log::info('Generating Excel report');
+                return $reportGenerator->exportAllExaminees(
+                    examSessionId: (int) $examSessionId,
+                    filters: [
+                        'test_location_id' => $testLocationId !== '' ? (int) $testLocationId : null,
+                        'branch_id' => $branchId !== '' ? (int) $branchId : null,
+                    ],
+                );
+            }
+
+            Log::info('Generating PDF report');
+            
+            // Generate PDF using TCPDF
+            $pdf = $reportGenerator->generateExamineeListPDF(
+                testLocationId: (int) $testLocationId,
                 filters: [
-                    'test_location_id' => $testLocationId !== '' ? (int) $testLocationId : null,
                     'branch_id' => $branchId !== '' ? (int) $branchId : null,
+                    'exam_session_id' => $examSessionId !== '' ? (int) $examSessionId : null,
                 ],
             );
+
+            Log::info('PDF generated successfully');
+
+            // Return direct response instead of Livewire response
+            $pdfContent = $pdf->Output('', 'S');
+            
+            // Clean PDF content to ensure valid UTF-8
+            $pdfContent = mb_convert_encoding($pdfContent, 'UTF-8', 'UTF-8');
+            
+            Log::info('Returning PDF response');
+            
+            return response($pdfContent)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'attachment; filename="examinee_list_' . now()->format('Ymd_His') . '.pdf"')
+                ->header('Content-Length', strlen($pdfContent));
+                
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation Error: ' . $e->getMessage());
+            throw $e; // Re-throw validation exceptions to show errors in UI
+        } catch (\Exception $e) {
+            Log::error('PDF Generation Error: ' . $e->getMessage());
+            Log::error('Error trace: ' . $e->getTraceAsString());
+            
+            // Return error response instead of throwing
+            return response('เกิดข้อผิดพลาดในการสร้างไฟล์ PDF: ' . $e->getMessage(), 500);
         }
-
-        $pdf = $reportGenerator->generateExamineeListPDF(
-            testLocationId: (int) $testLocationId,
-            filters: [
-                'branch_id' => $branchId !== '' ? (int) $branchId : null,
-                'exam_session_id' => $examSessionId !== '' ? (int) $examSessionId : null,
-            ],
-        );
-
-        return $pdf->download('examinee_list_' . now()->format('Ymd_His') . '.pdf');
     }
 
     public function render()

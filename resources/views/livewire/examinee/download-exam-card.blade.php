@@ -15,10 +15,11 @@
                 </div>
 
                 <div class="mt-6">
-                    <a href="{{ route('examinee.download-pdf') }}"
-                       class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-green-100">
+                    <button type="button"
+                            wire:click="download"
+                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-xs font-semibold text-gray-700 uppercase tracking-widest hover:bg-green-100">
                         ดาวน์โหลดบัตรประจำตัวสอบ (PDF)
-                    </a>
+                    </button>
                 </div>
             @endif
         </div>

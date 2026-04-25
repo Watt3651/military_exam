@@ -261,6 +261,9 @@
             <livewire:notification-alert />
         @endif
     </div>
+    
+    <!-- TallStackUI Scripts -->
+    @tallstackuiScripts
 </body>
 
 </html>
