@@ -108,6 +108,7 @@ export READINESS_CALCULATED_ROWS=develop,efficiency
 | http://[server-ip]/readiness/admin/readiness-items.php | จัดการรายการประเมิน |
 | http://[server-ip]/readiness/admin/readiness-display-settings.php | ตั้งค่าการแสดงผลและการคำนวณรายมิติ |
 | http://[server-ip]/readiness/admin/readiness-sync.php | Preview diff / backup / apply sync |
+| http://[server-ip]/readiness/admin/manual-overrides.php | จัดการ manual override |
 | http://[server-ip]/readiness/admin/api-clients.php | จัดการ API clients |
 | http://[server-ip]/readiness/admin/mock-percent-mappings.php | จัดการ Mock API metric mappings |
 | http://[server-ip]/readiness/admin/audit-log.php | Audit log viewer |
@@ -177,7 +178,9 @@ curl -X POST http://[server-ip]/readiness/api/v1/ingest.php \
 
 - ถ้า API client ถูกผูกกับหน่วยไว้แล้ว ไม่จำเป็นต้องส่ง `unit_code`
 - ค่าความพร้อมต้องอยู่ในช่วง `0-2`
-- ปัจจุบันลำดับความสำคัญของข้อมูลคือ `manual` มาก่อน `integration_mock` มาก่อน `api`
+- Dashboard ใช้ค่าจาก integration เป็นหลักตามลำดับ `integration_mock` มาก่อน `api`
+- การกรอกจากหน้า `input.php` จะถูกเก็บเป็น `manual override` แยกต่างหาก และจะทับเฉพาะช่องที่ผู้ใช้เลือก override เท่านั้น
+- หากเลือก `ใช้ค่าจากระบบ` ในหน้า `input.php` ระบบจะล้าง override ของช่องนั้นและกลับไปแสดงค่าจาก integration ตามปกติ
 - สามารถกำหนด `allowed_ips` และ `rate_limit_per_minute` ต่อ client ได้จากหน้า admin
 - secret ของ API client จะถูกแสดงเพียงครั้งเดียวตอนสร้างหรือ rotate
 

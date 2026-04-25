@@ -75,6 +75,7 @@ $items = getReadinessItems();
     <?php if (userCanEditReadiness(currentUser())): ?><a href="../input.php">กรอกข้อมูล</a><?php endif; ?>
     <a href="readiness-display-settings.php">การแสดงผลมิติ</a>
     <a href="readiness-sync.php">Sync Config</a>
+    <a href="manual-overrides.php">Manual Overrides</a>
     <?php if (currentUserCan('manage:users')): ?><a href="users.php">ผู้ใช้</a><?php endif; ?>
     <?php if (currentUserCan('manage:units')): ?><a href="units.php">หน่วย</a><?php endif; ?>
     <?php if (currentUserCan('manage:api')): ?><a href="api-clients.php">API Clients</a><?php endif; ?>

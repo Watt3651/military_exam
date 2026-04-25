@@ -196,6 +196,7 @@ body.tv-mode .page-footer{display:none}
       <?php if (currentUserCan('manage:items')): ?>
       <a href="admin/readiness-items.php">รายการประเมิน</a>
       <a href="admin/readiness-display-settings.php">การแสดงผลมิติ</a>
+      <a href="admin/manual-overrides.php">Manual Overrides</a>
       <?php endif; ?>
       <?php if (currentUserCan('manage:api')): ?>
       <a href="admin/api-clients.php">API Clients</a>

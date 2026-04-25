@@ -1413,6 +1413,7 @@ function bootstrapDatabase(PDO $pdo): void {
     bootstrapApiClients($pdo);
     bootstrapMockPercentMetricMappings($pdo);
     migrateLegacyData($pdo);
+    migrateLegacyManualEntriesToOverrides($pdo);
 
     $bootstrapped = true;
 }
@@ -1467,6 +1468,21 @@ function databaseSchemaStatements(): array {
                 UNIQUE KEY uniq_readiness_entry (unit_id, row_id, col_id, item_index, source),
                 CONSTRAINT fk_entries_unit FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE,
                 CONSTRAINT fk_entries_user FOREIGN KEY (updated_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            "CREATE TABLE IF NOT EXISTS readiness_overrides (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                unit_id INT NOT NULL,
+                row_id VARCHAR(50) NOT NULL,
+                col_id VARCHAR(50) NOT NULL,
+                item_index INT NOT NULL,
+                value TINYINT NOT NULL,
+                updated_by_user_id INT NULL,
+                source_name VARCHAR(255) NULL,
+                created_at DATETIME NOT NULL,
+                updated_at DATETIME NOT NULL,
+                UNIQUE KEY uniq_readiness_override (unit_id, row_id, col_id, item_index),
+                CONSTRAINT fk_overrides_unit FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE,
+                CONSTRAINT fk_overrides_user FOREIGN KEY (updated_by_user_id) REFERENCES users(id) ON DELETE SET NULL
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
             "CREATE TABLE IF NOT EXISTS api_clients (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -1569,6 +1585,21 @@ function databaseSchemaStatements(): array {
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
             UNIQUE (unit_id, row_id, col_id, item_index, source),
+            FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE,
+            FOREIGN KEY (updated_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+        )',
+        'CREATE TABLE IF NOT EXISTS readiness_overrides (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            unit_id INTEGER NOT NULL,
+            row_id TEXT NOT NULL,
+            col_id TEXT NOT NULL,
+            item_index INTEGER NOT NULL,
+            value INTEGER NOT NULL,
+            updated_by_user_id INTEGER NULL,
+            source_name TEXT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE (unit_id, row_id, col_id, item_index),
             FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE,
             FOREIGN KEY (updated_by_user_id) REFERENCES users(id) ON DELETE SET NULL
         )',
@@ -1868,6 +1899,60 @@ function migrateLegacyData(PDO $pdo): void {
     );
 }
 
+function migrateLegacyManualEntriesToOverrides(PDO $pdo): void {
+    $count = (int) $pdo->query("SELECT COUNT(*) FROM readiness_entries WHERE source = 'manual'")->fetchColumn();
+    if ($count === 0) {
+        return;
+    }
+
+    $rows = $pdo->query(
+        "SELECT unit_id, row_id, col_id, item_index, value, updated_by_user_id, source_name, created_at, updated_at
+         FROM readiness_entries
+         WHERE source = 'manual'
+         ORDER BY updated_at ASC, id ASC"
+    )->fetchAll();
+    if (!$rows) {
+        return;
+    }
+
+    $upsertSql = DB_DRIVER === 'mysql'
+        ? 'INSERT INTO readiness_overrides (unit_id, row_id, col_id, item_index, value, updated_by_user_id, source_name, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE value = VALUES(value), updated_by_user_id = VALUES(updated_by_user_id), source_name = VALUES(source_name), updated_at = VALUES(updated_at)'
+        : 'INSERT INTO readiness_overrides (unit_id, row_id, col_id, item_index, value, updated_by_user_id, source_name, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(unit_id, row_id, col_id, item_index) DO UPDATE SET
+             value = excluded.value,
+             updated_by_user_id = excluded.updated_by_user_id,
+             source_name = excluded.source_name,
+             updated_at = excluded.updated_at';
+
+    $insert = $pdo->prepare($upsertSql);
+
+    $pdo->beginTransaction();
+    try {
+        foreach ($rows as $row) {
+            $insert->execute([
+                $row['unit_id'],
+                $row['row_id'],
+                $row['col_id'],
+                $row['item_index'],
+                $row['value'],
+                $row['updated_by_user_id'],
+                $row['source_name'],
+                $row['created_at'],
+                $row['updated_at'],
+            ]);
+        }
+
+        $pdo->exec("DELETE FROM readiness_entries WHERE source = 'manual'");
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}
+
 function getItemsDefinition(): array {
     $stmt = db()->query('SELECT row_id, col_id, item_index, label, url FROM readiness_items WHERE is_active = 1 ORDER BY row_id, col_id, item_index');
     $rows = $stmt->fetchAll();
@@ -2154,23 +2239,59 @@ function sourcePriorityIndex(string $source): int {
 function loadData(?int $unitId = null): array {
     $items = getItemsDefinition();
     $rows = emptyRowsStructure($items);
+    $integrationRows = emptyRowsStructure($items);
+    $overrideRows = emptyRowsStructure($items);
+    $resolvedSources = emptyRowsStructure($items);
+    $integrationPresent = emptyRowsStructure($items);
+    $overridePresent = emptyRowsStructure($items);
+    foreach ($resolvedSources as $rowId => $rowDef) {
+        foreach (['personnel', 'material', 'tactic'] as $colId) {
+            foreach ($rowDef[$colId] as $itemIndex => $_value) {
+                $resolvedSources[$rowId][$colId][$itemIndex] = 'none';
+                $integrationPresent[$rowId][$colId][$itemIndex] = false;
+                $overridePresent[$rowId][$colId][$itemIndex] = false;
+            }
+        }
+    }
     $unitId ??= getFirstActiveUnitId();
     if ($unitId === null) {
-        return ['unit_id' => null, 'updated_at' => null, 'updated_by' => null, 'rows' => $rows];
+        return [
+            'unit_id' => null,
+            'updated_at' => null,
+            'updated_by' => null,
+            'rows' => $rows,
+            'integration_rows' => $integrationRows,
+            'override_rows' => $overrideRows,
+            'integration_present' => $integrationPresent,
+            'override_present' => $overridePresent,
+            'resolved_sources' => $resolvedSources,
+        ];
     }
 
-    $stmt = db()->prepare(
+    $pdo = db();
+    $stmt = $pdo->prepare(
         'SELECT re.*, COALESCE(u.display_name, re.source_name, re.source) AS actor_name
          FROM readiness_entries re
          LEFT JOIN users u ON u.id = re.updated_by_user_id
          WHERE re.unit_id = ?
+           AND re.source <> ?
          ORDER BY re.updated_at DESC, re.id DESC'
     );
-    $stmt->execute([$unitId]);
+    $stmt->execute([$unitId, 'manual']);
     $entries = $stmt->fetchAll();
 
+    $overrideStmt = $pdo->prepare(
+        'SELECT ro.*, COALESCE(u.display_name, ro.source_name, ?) AS actor_name
+         FROM readiness_overrides ro
+         LEFT JOIN users u ON u.id = ro.updated_by_user_id
+         WHERE ro.unit_id = ?
+         ORDER BY ro.updated_at DESC, ro.id DESC'
+    );
+    $overrideStmt->execute(['manual override', $unitId]);
+    $overrides = $overrideStmt->fetchAll();
+
     $selected = [];
-    $latest = $entries[0] ?? null;
+    $latest = null;
     foreach ($entries as $entry) {
         $key = $entry['row_id'] . '|' . $entry['col_id'] . '|' . $entry['item_index'];
         if (!isset($selected[$key])) {
@@ -2188,7 +2309,41 @@ function loadData(?int $unitId = null): array {
     }
 
     foreach ($selected as $entry) {
-        $rows[$entry['row_id']][$entry['col_id']][(int) $entry['item_index']] = (int) $entry['value'];
+        $rowId = (string) ($entry['row_id'] ?? '');
+        $colId = (string) ($entry['col_id'] ?? '');
+        $itemIndex = (int) ($entry['item_index'] ?? -1);
+        if (!isset($rows[$rowId][$colId]) || !array_key_exists($itemIndex, $rows[$rowId][$colId])) {
+            continue;
+        }
+
+        $value = min(2, max(0, (int) ($entry['value'] ?? 0)));
+        $rows[$rowId][$colId][$itemIndex] = $value;
+        $integrationRows[$rowId][$colId][$itemIndex] = $value;
+        $integrationPresent[$rowId][$colId][$itemIndex] = true;
+        $resolvedSources[$rowId][$colId][$itemIndex] = (string) ($entry['source'] ?? 'unknown');
+
+        if ($latest === null || strcmp((string) ($entry['updated_at'] ?? ''), (string) ($latest['updated_at'] ?? '')) > 0) {
+            $latest = $entry;
+        }
+    }
+
+    foreach ($overrides as $entry) {
+        $rowId = (string) ($entry['row_id'] ?? '');
+        $colId = (string) ($entry['col_id'] ?? '');
+        $itemIndex = (int) ($entry['item_index'] ?? -1);
+        if (!isset($rows[$rowId][$colId]) || !array_key_exists($itemIndex, $rows[$rowId][$colId])) {
+            continue;
+        }
+
+        $value = min(2, max(0, (int) ($entry['value'] ?? 0)));
+        $rows[$rowId][$colId][$itemIndex] = $value;
+        $overrideRows[$rowId][$colId][$itemIndex] = $value;
+        $overridePresent[$rowId][$colId][$itemIndex] = true;
+        $resolvedSources[$rowId][$colId][$itemIndex] = 'override';
+
+        if ($latest === null || strcmp((string) ($entry['updated_at'] ?? ''), (string) ($latest['updated_at'] ?? '')) > 0) {
+            $latest = $entry;
+        }
     }
 
     return [
@@ -2196,7 +2351,63 @@ function loadData(?int $unitId = null): array {
         'updated_at' => $latest['updated_at'] ?? null,
         'updated_by' => $latest['actor_name'] ?? null,
         'rows' => $rows,
+        'integration_rows' => $integrationRows,
+        'override_rows' => $overrideRows,
+        'integration_present' => $integrationPresent,
+        'override_present' => $overridePresent,
+        'resolved_sources' => $resolvedSources,
     ];
+}
+
+function persistReadinessOverrides(PDO $pdo, int $unitId, array $rows, ?int $userId, string $actorName, ?string $timestamp = null): bool {
+    $items = getItemsDefinition();
+    $timestamp = $timestamp ?: nowString();
+
+    $select = $pdo->prepare('SELECT id FROM readiness_overrides WHERE unit_id = ? AND row_id = ? AND col_id = ? AND item_index = ? LIMIT 1');
+    $insert = $pdo->prepare('INSERT INTO readiness_overrides (unit_id, row_id, col_id, item_index, value, updated_by_user_id, source_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $update = $pdo->prepare('UPDATE readiness_overrides SET value = ?, updated_by_user_id = ?, source_name = ?, updated_at = ? WHERE id = ?');
+    $delete = $pdo->prepare('DELETE FROM readiness_overrides WHERE unit_id = ? AND row_id = ? AND col_id = ? AND item_index = ?');
+
+    $pdo->beginTransaction();
+    try {
+        foreach ($items as $rowId => $rowDef) {
+            foreach (['personnel', 'material', 'tactic'] as $colId) {
+                foreach ($rowDef[$colId] as $itemIndex => $_item) {
+                    if (!isset($rows[$rowId]) || !isset($rows[$rowId][$colId]) || !array_key_exists($itemIndex, $rows[$rowId][$colId])) {
+                        continue;
+                    }
+
+                    $value = $rows[$rowId][$colId][$itemIndex];
+                    $select->execute([$unitId, $rowId, $colId, $itemIndex]);
+                    $existing = $select->fetch();
+
+                    if ($value === null || $value === '') {
+                        if ($existing) {
+                            $delete->execute([$unitId, $rowId, $colId, $itemIndex]);
+                        }
+                        continue;
+                    }
+
+                    $value = min(2, max(0, (int) $value));
+                    if ($existing) {
+                        $update->execute([$value, $userId, $actorName, $timestamp, $existing['id']]);
+                    } else {
+                        $insert->execute([$unitId, $rowId, $colId, $itemIndex, $value, $userId, $actorName, $timestamp, $timestamp]);
+                    }
+                }
+            }
+        }
+
+        writeAuditLog($pdo, $userId, $actorName, 'MANUAL_OVERRIDE_SYNC', 'unit', (string) $unitId, [
+            'unit_id' => $unitId,
+            'updated_at' => $timestamp,
+        ]);
+        $pdo->commit();
+        return true;
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 }
 
 function loadRowsBySource(PDO $pdo, int $unitId, string $source, ?array $items = null): array {

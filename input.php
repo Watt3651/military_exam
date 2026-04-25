@@ -19,29 +19,66 @@ if (!canAccessUnit($selectedUnitId)) {
 $selectedUnit = getUnitById($selectedUnitId);
 $data = loadData($selectedUnitId);
 $rows = $data['rows'] ?? [];
+$integrationRows = $data['integration_rows'] ?? [];
+$overrideRows = $data['override_rows'] ?? [];
+$integrationPresent = $data['integration_present'] ?? [];
+$overridePresent = $data['override_present'] ?? [];
+$resolvedSources = $data['resolved_sources'] ?? [];
 $saved = false;
 $error = '';
 
+function inputStatusText(int $value): string {
+  return match ($value) {
+    2 => 'พร้อม',
+    1 => 'ตรวจสอบ',
+    default => 'ยังไม่ประเมิน',
+  };
+}
+
+function inputResolvedSourceText(string $source): string {
+  return match ($source) {
+    'integration_mock' => 'Mock API',
+    'api' => 'API',
+    'override' => 'Manual Override',
+    'none' => 'ไม่มีข้อมูล',
+    default => $source,
+  };
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rows'])) {
     verifyCsrfRequest();
-  $newRows = sanitizeRows($rows, $allItems);
+  $overrideChanges = [];
+  $validationErrors = [];
     foreach ($items as $rowId => $rowDef) {
         foreach (['personnel', 'material', 'tactic'] as $col) {
             $count = count($rowDef[$col]);
             for ($index = 0; $index < $count; $index++) {
-                $value = (int) ($_POST['rows'][$rowId][$col][$index] ?? 0);
-        $newRows[$rowId][$col][$index] = min(2, max(0, $value));
+        $value = (string) ($_POST['rows'][$rowId][$col][$index] ?? 'system');
+        if ($value === 'system') {
+          $overrideChanges[$rowId][$col][$index] = null;
+          continue;
+        }
+        if (!in_array($value, ['0', '1', '2'], true)) {
+          $validationErrors[] = $rowId . '/' . $col . '/' . $index;
+          continue;
+        }
+
+        $overrideChanges[$rowId][$col][$index] = (int) $value;
             }
         }
     }
 
-  $validationErrors = validateRowsPayload($newRows, $allItems);
     if ($validationErrors) {
         $error = 'ข้อมูลที่ส่งมาไม่ถูกต้อง: ' . implode(', ', $validationErrors);
     } else {
-        saveData(['rows' => $newRows], $selectedUnitId, $user['id'], $user['name'], 'manual');
+    persistReadinessOverrides(db(), $selectedUnitId, $overrideChanges, $user['id'], $user['name']);
         $data = loadData($selectedUnitId);
         $rows = $data['rows'] ?? [];
+    $integrationRows = $data['integration_rows'] ?? [];
+    $overrideRows = $data['override_rows'] ?? [];
+    $integrationPresent = $data['integration_present'] ?? [];
+    $overridePresent = $data['override_present'] ?? [];
+    $resolvedSources = $data['resolved_sources'] ?? [];
         $saved = true;
     }
 }
@@ -70,11 +107,13 @@ th.col-left{text-align:left}
 tr:last-child td{border-bottom:none}
 .dim-cell{font-weight:600;font-size:13px}
 .dim-weight{font-size:11px;color:var(--theme-text-soft);font-weight:400;margin-top:2px}
-.item-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--theme-border-row-soft)}
+.item-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--theme-border-row-soft)}
 .item-row:last-child{border-bottom:none}
-.item-name{flex:1;font-size:12px;color:var(--theme-text)}
+.item-name{flex:1;font-size:12px;color:var(--theme-text);padding-top:4px}
 .item-name[href]{color:var(--theme-link);text-decoration:none}
 .item-name[href]:hover{color:var(--theme-link-hover);text-decoration:underline}
+.item-controls{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:210px}
+.item-meta{font-size:11px;color:var(--theme-text-soft);text-align:right;line-height:1.45}
 select.status-select{font-size:12px;padding:4px 8px;border:1px solid var(--theme-border-strong);border-radius:6px;background:var(--theme-surface);color:var(--theme-text);cursor:pointer;font-family:inherit}
 select.status-select:focus{outline:none;border-color:var(--theme-primary)}
 select.status-select.s-ready{background:var(--theme-success-bg);color:var(--theme-success-text);border-color:var(--theme-success-border)}
@@ -116,6 +155,7 @@ select.status-select.s-check{background:var(--theme-info-bg);color:var(--theme-t
     <?php if (currentUserCan('manage:items')): ?>
     <a href="admin/readiness-items.php">รายการประเมิน</a>
     <a href="admin/readiness-display-settings.php">การแสดงผลมิติ</a>
+    <a href="admin/manual-overrides.php">Manual Overrides</a>
     <?php endif; ?>
     <?php if (currentUserCan('manage:api')): ?>
     <a href="admin/api-clients.php">API</a>
@@ -153,7 +193,7 @@ select.status-select.s-check{background:var(--theme-info-bg);color:var(--theme-t
   <?php if ($saved): ?>
   <div class="alert-success">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="<?= htmlspecialchars(themeColor('success_text'), ENT_QUOTES, 'UTF-8') ?>" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-    บันทึกข้อมูลเรียบร้อยแล้ว — <?= htmlspecialchars((string) ($data['updated_at'] ?? date('Y-m-d H:i:s'))) ?> โดย <?= htmlspecialchars($user['name']) ?>
+    บันทึกการตั้งค่า manual override เรียบร้อยแล้ว — <?= htmlspecialchars((string) ($data['updated_at'] ?? date('Y-m-d H:i:s'))) ?> โดย <?= htmlspecialchars($user['name']) ?>
   </div>
   <?php endif; ?>
 
@@ -165,6 +205,7 @@ select.status-select.s-check{background:var(--theme-info-bg);color:var(--theme-t
 
   <div class="section-title">กรอกสถานะความพร้อมแต่ละรายการ</div>
   <div class="config-note">คอลัมน์สรุปและแถวสรุปท้ายตารางจะแสดงเฉพาะคะแนนรวมจริงที่ถูกคูณน้ำหนักแล้ว เพื่อให้อ่านค่าได้ตรงและชัดเจนขึ้น</div>
+  <div class="config-note">ค่าจากระบบเป็นค่าเริ่มต้นของ Dashboard หากต้องการแก้เฉพาะรายการให้เลือก 0-2 เพื่อสร้าง manual override และเลือก “ใช้ค่าจากระบบ” เมื่อต้องการล้าง override นั้น</div>
   <?php if (READINESS_VISIBLE_ROWS !== '' || READINESS_CALCULATED_ROWS !== ''): ?>
   <div class="config-note">
     มิติที่แสดง: <strong><?= htmlspecialchars(implode(', ', array_map(static fn(string $rowId): string => $items[$rowId]['label'] ?? $rowId, array_keys($items))), ENT_QUOTES, 'UTF-8') ?></strong><br>
@@ -205,16 +246,34 @@ select.status-select.s-check{background:var(--theme-info-bg);color:var(--theme-t
           ?>
           <td>
             <?php foreach ($rowDef[$col] as $index => $item):
-              $value = $values[$index] ?? 0;
-              $selectClass = $value === 2 ? 's-ready' : ($value === 1 ? 's-check' : '');
+              $value = (int) ($values[$index] ?? 0);
+              $systemValue = (int) ($integrationRows[$rowId][$col][$index] ?? 0);
+              $overrideValue = (int) ($overrideRows[$rowId][$col][$index] ?? 0);
+              $hasIntegration = (bool) ($integrationPresent[$rowId][$col][$index] ?? false);
+              $hasOverride = (bool) ($overridePresent[$rowId][$col][$index] ?? false);
+              $resolvedSource = (string) ($resolvedSources[$rowId][$col][$index] ?? 'none');
+              $selectedValue = $hasOverride ? (string) $overrideValue : 'system';
+              $displayScore = $hasOverride ? $overrideValue : ($hasIntegration ? $systemValue : $value);
+              $selectClass = $displayScore === 2 ? 's-ready' : ($displayScore === 1 ? 's-check' : '');
+              $systemSourceLabel = $hasIntegration ? inputResolvedSourceText($resolvedSource === 'override' ? 'api' : $resolvedSource) : '';
+              $systemLabel = $hasIntegration
+                ? 'ใช้ค่าจากระบบ (' . inputStatusText($systemValue) . ' จาก ' . $systemSourceLabel . ')'
+                : 'ใช้ค่าจากระบบ (ยังไม่มีค่า)';
+              $metaText = $hasOverride
+                ? 'Override ปัจจุบัน: ' . inputStatusText($overrideValue) . ($hasIntegration ? ' | ค่าระบบ: ' . inputStatusText($systemValue) : ' | ค่าระบบ: ยังไม่มีค่า')
+                : ($hasIntegration ? 'ค่าที่แสดงมาจาก ' . inputResolvedSourceText($resolvedSource) . ': ' . inputStatusText($systemValue) : 'ยังไม่มีค่าจากระบบ');
             ?>
             <div class="item-row">
               <?= renderItemName($item, 'item-name') ?>
-              <select class="status-select <?= $selectClass ?>" name="rows[<?= $rowId ?>][<?= $col ?>][<?= $index ?>]" onchange="updateSelect(this)">
-                <option value="0" <?= $value === 0 ? 'selected' : '' ?>>— ยังไม่ประเมิน</option>
-                <option value="1" <?= $value === 1 ? 'selected' : '' ?>>ตรวจสอบ</option>
-                <option value="2" <?= $value === 2 ? 'selected' : '' ?>>พร้อม</option>
-              </select>
+              <div class="item-controls">
+                <select class="status-select <?= $selectClass ?>" name="rows[<?= $rowId ?>][<?= $col ?>][<?= $index ?>]" onchange="updateSelect(this)">
+                  <option value="system" data-score="<?= $hasIntegration ? $systemValue : 0 ?>" <?= $selectedValue === 'system' ? 'selected' : '' ?>><?= htmlspecialchars($systemLabel) ?></option>
+                  <option value="0" data-score="0" <?= $selectedValue === '0' ? 'selected' : '' ?>>Override: ยังไม่ประเมิน</option>
+                  <option value="1" data-score="1" <?= $selectedValue === '1' ? 'selected' : '' ?>>Override: ตรวจสอบ</option>
+                  <option value="2" data-score="2" <?= $selectedValue === '2' ? 'selected' : '' ?>>Override: พร้อม</option>
+                </select>
+                <div class="item-meta"><?= htmlspecialchars($metaText) ?></div>
+              </div>
             </div>
             <?php endforeach; ?>
             <div class="cell-score">คะแนน: <strong><?= number_format($cellScore, 2) ?>%</strong></div>
@@ -255,17 +314,18 @@ select.status-select.s-check{background:var(--theme-info-bg);color:var(--theme-t
 </div>
 
 <div class="submit-bar">
-  <button class="btn-save" type="submit">บันทึกข้อมูล</button>
+  <button class="btn-save" type="submit">บันทึก override</button>
   <a class="btn-dash" href="index.php">ดู Dashboard</a>
-  <span class="save-hint">ข้อมูลจะถูกบันทึกและแสดงผลใน Dashboard ทันที</span>
+  <span class="save-hint">Dashboard จะใช้ค่าจากระบบเป็นหลัก และใช้ manual override เฉพาะช่องที่คุณเลือกไว้</span>
 </div>
 </form>
 
 <script>
 function updateSelect(el) {
     el.className = 'status-select';
-    if (el.value === '2') el.classList.add('s-ready');
-    if (el.value === '1') el.classList.add('s-check');
+    const score = Number(el.options[el.selectedIndex]?.dataset.score || 0);
+    if (score === 2) el.classList.add('s-ready');
+    if (score === 1) el.classList.add('s-check');
 }
 </script>
 </body>

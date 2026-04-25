@@ -83,7 +83,7 @@ body{
 }
 
 .section-title{
-  font-size:15px;
+  font-size:22px;
   font-weight:600;
   color:var(--theme-text);
   margin-bottom:14px;

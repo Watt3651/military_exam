@@ -40,6 +40,7 @@ $entityTypes = auditEntityTypeOptions();
     <?php if (currentUserCan('manage:users')): ?><a href="users.php">ผู้ใช้</a><?php endif; ?>
     <?php if (currentUserCan('manage:units')): ?><a href="units.php">หน่วย</a><?php endif; ?>
     <?php if (currentUserCan('manage:items')): ?><a href="readiness-items.php">รายการประเมิน</a><?php endif; ?>
+    <?php if (currentUserCan('manage:items')): ?><a href="manual-overrides.php">Manual Overrides</a><?php endif; ?>
     <?php if (currentUserCan('manage:api')): ?><a href="api-clients.php">API Clients</a><?php endif; ?>
     <?php if (currentUserCan('manage:api')): ?><a href="mock-percent-mappings.php">Mock API Map</a><?php endif; ?>
     <a href="../logout.php">ออกจากระบบ</a>

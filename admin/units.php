@@ -70,6 +70,7 @@ $units = getUnits(false);
     <?php if (userCanEditReadiness(currentUser())): ?><a href="../input.php">กรอกข้อมูล</a><?php endif; ?>
     <a href="users.php">จัดการผู้ใช้</a>
     <?php if (currentUserCan('manage:items')): ?><a href="readiness-items.php">รายการประเมิน</a><?php endif; ?>
+    <?php if (currentUserCan('manage:items')): ?><a href="manual-overrides.php">Manual Overrides</a><?php endif; ?>
     <?php if (currentUserCan('manage:api')): ?><a href="api-clients.php">API Clients</a><?php endif; ?>
     <?php if (currentUserCan('manage:api')): ?><a href="mock-percent-mappings.php">Mock API Map</a><?php endif; ?>
     <?php if (currentUserCan('view:audit')): ?><a href="audit-log.php">Audit Log</a><?php endif; ?>

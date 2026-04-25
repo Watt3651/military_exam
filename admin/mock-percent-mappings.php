@@ -118,6 +118,7 @@ $mappings = getMockPercentMetricMappings(true);
     <a href="users.php">ผู้ใช้</a>
     <a href="units.php">หน่วย</a>
     <?php if (currentUserCan('manage:items')): ?><a href="readiness-items.php">รายการประเมิน</a><?php endif; ?>
+    <?php if (currentUserCan('manage:items')): ?><a href="manual-overrides.php">Manual Overrides</a><?php endif; ?>
     <a href="api-clients.php">API Clients</a>
     <?php if (currentUserCan('view:audit')): ?><a href="audit-log.php">Audit Log</a><?php endif; ?>
     <a href="../logout.php">ออกจากระบบ</a>
