@@ -143,6 +143,9 @@ define('LEGACY_DATA_FILE', __DIR__ . '/data/readiness.json');
 define('READINESS_SYNC_BACKUP_DIR', getenv('READINESS_SYNC_BACKUP_DIR') ?: (__DIR__ . '/data/backups/readiness-sync'));
 define('READINESS_VISIBLE_ROWS', trim((string) (getenv('READINESS_VISIBLE_ROWS') ?: '')));
 define('READINESS_CALCULATED_ROWS', trim((string) (getenv('READINESS_CALCULATED_ROWS') ?: '')));
+define('READINESS_SCORE_PERCENT_0', is_numeric(getenv('READINESS_SCORE_PERCENT_0')) ? (float) getenv('READINESS_SCORE_PERCENT_0') : 0.0);
+define('READINESS_SCORE_PERCENT_1', is_numeric(getenv('READINESS_SCORE_PERCENT_1')) ? (float) getenv('READINESS_SCORE_PERCENT_1') : 70.0);
+define('READINESS_SCORE_PERCENT_2', is_numeric(getenv('READINESS_SCORE_PERCENT_2')) ? (float) getenv('READINESS_SCORE_PERCENT_2') : 100.0);
 define('READINESS_READY_THRESHOLD', is_numeric(getenv('READINESS_READY_THRESHOLD')) ? (float) getenv('READINESS_READY_THRESHOLD') : 75.0);
 define('READINESS_WARNING_THRESHOLD', is_numeric(getenv('READINESS_WARNING_THRESHOLD')) ? (float) getenv('READINESS_WARNING_THRESHOLD') : 40.0);
 define('SYNC_ITEMS_FROM_CONFIG', filter_var(getenv('READINESS_SYNC_ITEMS_FROM_CONFIG') ?: '0', FILTER_VALIDATE_BOOLEAN));
@@ -319,4 +322,4 @@ if (!function_exists('readinessThemePresetConfig')) {
 define('APP_THEME_PRESET', getenv('READINESS_THEME_PRESET') ?: 'navy');
 define('APP_THEME', readinessThemePresetConfig(APP_THEME_PRESET));
 
-define('SITE_NAME', 'ระบบรายงานสถานะความพร้อม กองเรือยุทธการ');
+define('SITE_NAME', 'I-FRMS: Integrated Force Readiness Management System');

@@ -94,14 +94,60 @@ function configurePhpSecurity(): void {
     }
 }
 
+function readinessScorePercentSetting(string $settingKey, float $default, string $label, ?PDO $pdo = null): float {
+    $raw = getAppSetting($settingKey, null, $pdo);
+    if ($raw === null || trim($raw) === '') {
+        $value = $default;
+    } else {
+        if (!is_numeric($raw)) {
+            throw new InvalidArgumentException($label . ' ต้องเป็นตัวเลข');
+        }
+        $value = (float) $raw;
+    }
+
+    if ($value < 0 || $value > 100) {
+        throw new InvalidArgumentException($label . ' ต้องอยู่ระหว่าง 0 ถึง 100');
+    }
+
+    return $value;
+}
+
+function readinessScorePercentMap(?PDO $pdo = null): array {
+    if (array_key_exists('readiness_score_percent_map_cache', $GLOBALS) && is_array($GLOBALS['readiness_score_percent_map_cache'])) {
+        return $GLOBALS['readiness_score_percent_map_cache'];
+    }
+
+    $map = [
+        0 => readinessScorePercentSetting('readiness_score_percent_0', READINESS_SCORE_PERCENT_0, 'คะแนน 0', $pdo),
+        1 => readinessScorePercentSetting('readiness_score_percent_1', READINESS_SCORE_PERCENT_1, 'คะแนน 1', $pdo),
+        2 => readinessScorePercentSetting('readiness_score_percent_2', READINESS_SCORE_PERCENT_2, 'คะแนน 2', $pdo),
+    ];
+
+    if ($map[0] > $map[1] || $map[1] > $map[2]) {
+        throw new InvalidArgumentException('คะแนน 0/1/2 ต้องเรียงจากน้อยไปมาก');
+    }
+
+    $GLOBALS['readiness_score_percent_map_cache'] = $map;
+    return $map;
+}
+
+function readinessScoreToPercent(int $score): float {
+    return (float) (readinessScorePercentMap()[$score] ?? 0.0);
+}
+
 function calcCellScore(array $vals): float {
     $n = count($vals);
     if ($n === 0) {
         return 0;
     }
 
-    $sum = array_sum($vals);
-    return ($sum / ($n * 2)) * 100;
+    $totalPercent = 0.0;
+    foreach ($vals as $value) {
+        $score = min(2, max(0, (int) $value));
+        $totalPercent += readinessScoreToPercent($score);
+    }
+
+    return $totalPercent / $n;
 }
 
 function readinessAllRowIds(): array {
@@ -896,6 +942,7 @@ function resetReadinessSettingsCache(): void {
     $GLOBALS['readiness_visible_row_ids_cache'] = null;
     $GLOBALS['readiness_calculated_row_ids_cache'] = null;
     $GLOBALS['readiness_effective_row_weights_cache'] = null;
+    $GLOBALS['readiness_score_percent_map_cache'] = null;
 }
 
 function getAppSettings(?PDO $pdo = null): array {
@@ -961,6 +1008,7 @@ function readinessSettingsSourceLabel(string $key, ?PDO $pdo = null): string {
 function getReadinessDisplaySettings(?PDO $pdo = null): array {
     $pdo ??= db();
     $thresholds = readinessStatusThresholds($pdo);
+    $scorePercentMap = readinessScorePercentMap($pdo);
     return [
         'visible_rows_raw' => getAppSetting('readiness_visible_rows', READINESS_VISIBLE_ROWS, $pdo) ?? '',
         'calculated_rows_raw' => getAppSetting('readiness_calculated_rows', READINESS_CALCULATED_ROWS, $pdo) ?? '',
@@ -972,10 +1020,16 @@ function getReadinessDisplaySettings(?PDO $pdo = null): array {
         'warning_threshold' => $thresholds['warning'],
         'ready_threshold_source' => $thresholds['ready_source'],
         'warning_threshold_source' => $thresholds['warning_source'],
+        'score_percent_0' => $scorePercentMap[0],
+        'score_percent_1' => $scorePercentMap[1],
+        'score_percent_2' => $scorePercentMap[2],
+        'score_percent_0_source' => readinessSettingsSourceLabel('readiness_score_percent_0', $pdo),
+        'score_percent_1_source' => readinessSettingsSourceLabel('readiness_score_percent_1', $pdo),
+        'score_percent_2_source' => readinessSettingsSourceLabel('readiness_score_percent_2', $pdo),
     ];
 }
 
-function updateReadinessDisplaySettings(array $visibleRows, array $calculatedRows, float $readyThreshold, float $warningThreshold, ?array $actor = null, ?PDO $pdo = null): void {
+function updateReadinessDisplaySettings(array $visibleRows, array $calculatedRows, float $readyThreshold, float $warningThreshold, float $scorePercent0, float $scorePercent1, float $scorePercent2, ?array $actor = null, ?PDO $pdo = null): void {
     $pdo ??= db();
     $actor ??= currentUser();
     $allowedRowIds = readinessAllRowIds();
@@ -1007,18 +1061,32 @@ function updateReadinessDisplaySettings(array $visibleRows, array $calculatedRow
     if ($warningThreshold >= $readyThreshold) {
         throw new InvalidArgumentException('เกณฑ์สถานะปานกลางต้องน้อยกว่าเกณฑ์สถานะพร้อม');
     }
+    foreach ([0 => $scorePercent0, 1 => $scorePercent1, 2 => $scorePercent2] as $score => $percent) {
+        if ($percent < 0 || $percent > 100) {
+            throw new InvalidArgumentException('คะแนน ' . $score . ' ต้องอยู่ระหว่าง 0 ถึง 100');
+        }
+    }
+    if ($scorePercent0 > $scorePercent1 || $scorePercent1 > $scorePercent2) {
+        throw new InvalidArgumentException('คะแนน 0/1/2 ต้องเรียงจากน้อยไปมาก');
+    }
 
     $userId = isset($actor['id']) ? (int) $actor['id'] : null;
     setAppSetting('readiness_visible_rows', implode(',', $visible), $userId, $pdo);
     setAppSetting('readiness_calculated_rows', implode(',', $calculated), $userId, $pdo);
     setAppSetting('readiness_ready_threshold', (string) $readyThreshold, $userId, $pdo);
     setAppSetting('readiness_warning_threshold', (string) $warningThreshold, $userId, $pdo);
+    setAppSetting('readiness_score_percent_0', (string) $scorePercent0, $userId, $pdo);
+    setAppSetting('readiness_score_percent_1', (string) $scorePercent1, $userId, $pdo);
+    setAppSetting('readiness_score_percent_2', (string) $scorePercent2, $userId, $pdo);
 
     writeAuditLog($pdo, $actor['id'] ?? null, $actor['name'] ?? ($actor['username'] ?? null), 'UPDATE_READINESS_DISPLAY_SETTINGS', 'app_settings', 'readiness_display', [
         'visible_rows' => $visible,
         'calculated_rows' => $calculated,
         'ready_threshold' => $readyThreshold,
         'warning_threshold' => $warningThreshold,
+        'score_percent_0' => $scorePercent0,
+        'score_percent_1' => $scorePercent1,
+        'score_percent_2' => $scorePercent2,
     ]);
 }
 
@@ -1029,12 +1097,19 @@ function clearReadinessDisplaySettingsOverride(?array $actor = null, ?PDO $pdo =
     deleteAppSetting('readiness_calculated_rows', $pdo);
     deleteAppSetting('readiness_ready_threshold', $pdo);
     deleteAppSetting('readiness_warning_threshold', $pdo);
+    deleteAppSetting('readiness_score_percent_0', $pdo);
+    deleteAppSetting('readiness_score_percent_1', $pdo);
+    deleteAppSetting('readiness_score_percent_2', $pdo);
     $thresholds = readinessStatusThresholds($pdo);
+    $scorePercentMap = readinessScorePercentMap($pdo);
     writeAuditLog($pdo, $actor['id'] ?? null, $actor['name'] ?? ($actor['username'] ?? null), 'RESET_READINESS_DISPLAY_SETTINGS', 'app_settings', 'readiness_display', [
         'visible_rows' => readinessVisibleRowIds(),
         'calculated_rows' => readinessCalculatedRowIds(),
         'ready_threshold' => $thresholds['ready'],
         'warning_threshold' => $thresholds['warning'],
+        'score_percent_0' => $scorePercentMap[0],
+        'score_percent_1' => $scorePercentMap[1],
+        'score_percent_2' => $scorePercentMap[2],
     ]);
 }
 

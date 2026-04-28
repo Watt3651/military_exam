@@ -18,10 +18,13 @@ try {
         if ($action === 'save') {
             $visibleRows = array_values(array_map('strval', (array) ($_POST['visible_rows'] ?? [])));
             $calculatedRows = array_values(array_map('strval', (array) ($_POST['calculated_rows'] ?? [])));
-      $readyThreshold = (float) ($_POST['ready_threshold'] ?? READINESS_READY_THRESHOLD);
-      $warningThreshold = (float) ($_POST['warning_threshold'] ?? READINESS_WARNING_THRESHOLD);
-      updateReadinessDisplaySettings($visibleRows, $calculatedRows, $readyThreshold, $warningThreshold, $currentUser, db());
-      $message = 'บันทึกการตั้งค่าการแสดงผลมิติและเกณฑ์สถานะเรียบร้อยแล้ว';
+            $readyThreshold = (float) ($_POST['ready_threshold'] ?? READINESS_READY_THRESHOLD);
+            $warningThreshold = (float) ($_POST['warning_threshold'] ?? READINESS_WARNING_THRESHOLD);
+            $scorePercent0 = (float) ($_POST['score_percent_0'] ?? READINESS_SCORE_PERCENT_0);
+            $scorePercent1 = (float) ($_POST['score_percent_1'] ?? READINESS_SCORE_PERCENT_1);
+            $scorePercent2 = (float) ($_POST['score_percent_2'] ?? READINESS_SCORE_PERCENT_2);
+            updateReadinessDisplaySettings($visibleRows, $calculatedRows, $readyThreshold, $warningThreshold, $scorePercent0, $scorePercent1, $scorePercent2, $currentUser, db());
+            $message = 'บันทึกการตั้งค่าการแสดงผลมิติ เกณฑ์สถานะ และ mapping คะแนนเรียบร้อยแล้ว';
         }
 
         if ($action === 'reset_override') {
@@ -36,6 +39,9 @@ try {
 $settings = getReadinessDisplaySettings(db());
 $readyThresholdValue = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string) ($_POST['ready_threshold'] ?? $settings['ready_threshold']) : (string) $settings['ready_threshold'];
 $warningThresholdValue = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string) ($_POST['warning_threshold'] ?? $settings['warning_threshold']) : (string) $settings['warning_threshold'];
+$scorePercent0Value = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string) ($_POST['score_percent_0'] ?? $settings['score_percent_0']) : (string) $settings['score_percent_0'];
+$scorePercent1Value = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string) ($_POST['score_percent_1'] ?? $settings['score_percent_1']) : (string) $settings['score_percent_1'];
+$scorePercent2Value = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string) ($_POST['score_percent_2'] ?? $settings['score_percent_2']) : (string) $settings['score_percent_2'];
 $visibleLookup = array_fill_keys($settings['visible_rows'], true);
 $calculatedLookup = array_fill_keys($settings['calculated_rows'], true);
 $h = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
@@ -92,9 +98,10 @@ $h = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 
   <div class="section">
     <h2>แนวทางใช้งาน</h2>
     <div class="hint">
-      หน้านี้จะบันทึกการตั้งค่าในฐานข้อมูลโดยตรง และมีผล override ค่า <code>READINESS_VISIBLE_ROWS</code> / <code>READINESS_CALCULATED_ROWS</code> / <code>READINESS_READY_THRESHOLD</code> / <code>READINESS_WARNING_THRESHOLD</code> จาก env<br>
+      หน้านี้จะบันทึกการตั้งค่าในฐานข้อมูลโดยตรง และมีผล override ค่า <code>READINESS_VISIBLE_ROWS</code> / <code>READINESS_CALCULATED_ROWS</code> / <code>READINESS_READY_THRESHOLD</code> / <code>READINESS_WARNING_THRESHOLD</code> / <code>READINESS_SCORE_PERCENT_0</code> / <code>READINESS_SCORE_PERCENT_1</code> / <code>READINESS_SCORE_PERCENT_2</code> จาก env<br>
       ถ้ามิติบางตัวถูกเลือกให้แสดง แต่ไม่ถูกเลือกให้คำนวณ ระบบจะแสดงข้อมูลได้ตามปกติ แต่จะไม่รวมในสูตรคะแนน<br>
       เกณฑ์สถานะจะถูกใช้ร่วมกันทั้ง badge สถานะและสีของคะแนนบน Dashboard และ Input<br>
+      mapping คะแนนจะใช้แปลงค่า 0/1/2 ไปเป็นเปอร์เซ็นต์ก่อนนำไปคิดคะแนนรวมของแต่ละช่อง<br>
       ถ้ากด "กลับไปใช้ env/default" ระบบจะลบค่า override จากฐานข้อมูล และกลับไปใช้ค่าจาก env หรือค่าปริยายแทน
     </div>
   </div>
@@ -106,8 +113,12 @@ $h = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 
       การคำนวณ: <strong><?= $h($settings['calculated_source']) ?></strong><br>
       เกณฑ์สถานะพร้อม: <strong><?= $h($settings['ready_threshold_source']) ?></strong><br>
       เกณฑ์สถานะปานกลาง: <strong><?= $h($settings['warning_threshold_source']) ?></strong><br>
+      คะแนน 0: <strong><?= $h($settings['score_percent_0_source']) ?></strong><br>
+      คะแนน 1: <strong><?= $h($settings['score_percent_1_source']) ?></strong><br>
+      คะแนน 2: <strong><?= $h($settings['score_percent_2_source']) ?></strong><br>
       มิติที่แสดงตอนนี้: <code><?= $h(implode(',', $settings['visible_rows'])) ?></code><br>
       มิติที่ใช้คำนวณตอนนี้: <code><?= $h(implode(',', $settings['calculated_rows'])) ?></code><br>
+      Mapping คะแนน: <strong>0 = <?= $h(number_format((float) $settings['score_percent_0'], 2)) ?>%</strong>, <strong>1 = <?= $h(number_format((float) $settings['score_percent_1'], 2)) ?>%</strong>, <strong>2 = <?= $h(number_format((float) $settings['score_percent_2'], 2)) ?>%</strong><br>
       พร้อม: <strong><?= $h(number_format((float) $settings['ready_threshold'], 2)) ?>%</strong> ขึ้นไป<br>
       ปานกลาง: <strong><?= $h(number_format((float) $settings['warning_threshold'], 2)) ?>%</strong> ถึงต่ำกว่า <strong><?= $h(number_format((float) $settings['ready_threshold'], 2)) ?>%</strong><br>
       ต้องปรับปรุง: ต่ำกว่า <strong><?= $h(number_format((float) $settings['warning_threshold'], 2)) ?>%</strong>
@@ -119,6 +130,16 @@ $h = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 
     <input type="hidden" name="action" value="save">
 
     <div class="threshold-grid" style="margin-bottom:16px">
+      <div class="threshold-card">
+        <h3>Mapping คะแนน 0 / 1 / 2</h3>
+        <div class="source">ใช้แปลงคะแนนดิบ 0, 1, 2 ไปเป็นเปอร์เซ็นต์ก่อนเข้าสูตรรวม โดยต้องเรียงจากน้อยไปมาก</div>
+        <label for="score-percent-0">คะแนน 0 (%)</label>
+        <input id="score-percent-0" type="number" name="score_percent_0" min="0" max="100" step="0.01" value="<?= $h($scorePercent0Value) ?>" required>
+        <label for="score-percent-1" style="margin-top:10px">คะแนน 1 (%)</label>
+        <input id="score-percent-1" type="number" name="score_percent_1" min="0" max="100" step="0.01" value="<?= $h($scorePercent1Value) ?>" required>
+        <label for="score-percent-2" style="margin-top:10px">คะแนน 2 (%)</label>
+        <input id="score-percent-2" type="number" name="score_percent_2" min="0" max="100" step="0.01" value="<?= $h($scorePercent2Value) ?>" required>
+      </div>
       <div class="threshold-card">
         <h3>เกณฑ์สถานะพร้อม</h3>
         <div class="source">คะแนนตั้งแต่ค่านี้ขึ้นไปจะแสดงเป็น "พร้อม" และใช้สี success</div>
@@ -173,7 +194,7 @@ $h = static fn($value): string => htmlspecialchars((string) $value, ENT_QUOTES, 
     <input type="hidden" name="action" value="reset_override">
     <h2>กลับไปใช้ env/default</h2>
     <div class="hint" style="margin-bottom:12px">
-      ใช้เมื่อต้องการลบค่า override ในฐานข้อมูล แล้วกลับไปใช้ <code>READINESS_VISIBLE_ROWS</code>, <code>READINESS_CALCULATED_ROWS</code>, <code>READINESS_READY_THRESHOLD</code> และ <code>READINESS_WARNING_THRESHOLD</code> จาก env หรือค่าปริยาย
+      ใช้เมื่อต้องการลบค่า override ในฐานข้อมูล แล้วกลับไปใช้ <code>READINESS_VISIBLE_ROWS</code>, <code>READINESS_CALCULATED_ROWS</code>, <code>READINESS_READY_THRESHOLD</code>, <code>READINESS_WARNING_THRESHOLD</code>, <code>READINESS_SCORE_PERCENT_0</code>, <code>READINESS_SCORE_PERCENT_1</code> และ <code>READINESS_SCORE_PERCENT_2</code> จาก env หรือค่าปริยาย
     </div>
     <button class="btn-secondary" type="submit" onclick="return confirm('ยืนยันการล้างค่าที่ override ในฐานข้อมูล?')">กลับไปใช้ env/default</button>
   </form>

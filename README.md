@@ -83,6 +83,18 @@ export READINESS_CALCULATED_ROWS=develop,efficiency
 - มิติที่ไม่แสดงจะยังคงอยู่ในฐานข้อมูลและ API ได้ตามปกติ และหน้า Input จะไม่ล้างค่าของมิติที่ซ่อนไว้ตอนกดบันทึก
 - ถ้ามีการตั้งค่าผ่านหน้า admin ระบบจะใช้ค่าจากฐานข้อมูลเป็นอันดับแรก และ env จะทำหน้าที่เป็น fallback/default
 
+การ mapping คะแนน `0/1/2` ไปเป็นเปอร์เซ็นต์สามารถตั้งได้ทั้งจาก env และจากหน้า admin `admin/readiness-display-settings.php`
+
+```bash
+export READINESS_SCORE_PERCENT_0=0
+export READINESS_SCORE_PERCENT_1=70
+export READINESS_SCORE_PERCENT_2=100
+```
+
+- ค่า default ปัจจุบันคือ `0 = 0%`, `1 = 70%`, `2 = 100%`
+- ถ้ามีการตั้งค่าผ่านหน้า admin ระบบจะใช้ค่าจากฐานข้อมูลก่อน และปุ่ม reset จะพากลับมาใช้ env/default
+- mapping นี้มีผลกับการคำนวณคะแนนรวมของแต่ละช่องโดยตรง แต่ยังคงเก็บข้อมูลดิบในฐานข้อมูลเป็น `0/1/2` เหมือนเดิม
+
 หมายเหตุ: schema จะถูกสร้างอัตโนมัติเมื่อเชื่อมต่อสำเร็จ
 
 ## 5. ผู้ใช้ตั้งต้นและการย้ายข้อมูลเดิม
@@ -106,7 +118,7 @@ export READINESS_CALCULATED_ROWS=develop,efficiency
 | http://[server-ip]/readiness/admin/users.php | จัดการผู้ใช้ |
 | http://[server-ip]/readiness/admin/units.php | จัดการหน่วย |
 | http://[server-ip]/readiness/admin/readiness-items.php | จัดการรายการประเมิน |
-| http://[server-ip]/readiness/admin/readiness-display-settings.php | ตั้งค่าการแสดงผลและการคำนวณรายมิติ |
+| http://[server-ip]/readiness/admin/readiness-display-settings.php | ตั้งค่าการแสดงผล, threshold สถานะ, และ mapping คะแนน 0/1/2 -> % |
 | http://[server-ip]/readiness/admin/readiness-sync.php | Preview diff / backup / apply sync |
 | http://[server-ip]/readiness/admin/manual-overrides.php | จัดการ manual override |
 | http://[server-ip]/readiness/admin/api-clients.php | จัดการ API clients |
